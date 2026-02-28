@@ -5,6 +5,7 @@ plotly
 streamlit-echarts
 streamlit-extras
 folium
+streamlit-folium
 streamlit-aggrid
 reportlab
 fpdf2
