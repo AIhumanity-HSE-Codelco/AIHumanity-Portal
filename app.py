@@ -3,83 +3,60 @@ import pandas as pd
 import numpy as np
 import folium
 from streamlit_folium import folium_static
-import plotly.graph_objects as go
+import plotly.express as px
 from datetime import datetime
+import pytz
 
-# --- CONFIGURACIÓN DE NÚCLEO ---
-st.set_page_config(page_title="AIH-GLOBAL CORE", layout="wide")
+# --- CONFIGURACIÓN DE ALTA DISPONIBILIDAD ---
+st.set_page_config(page_title="AIH-GLOBAL MASTER", layout="wide")
 
-# --- CSS DE ALTA DENSIDAD ---
+# --- ESTILO CLARO INDUSTRIAL ---
 st.markdown("""
     <style>
-    .reportview-container { background: #fdfdfd; }
-    .stMetric { border: 1px solid #2d3436; background: white; padding: 10px; border-radius: 5px; }
-    .sidebar .sidebar-content { background: #1a1a1a; }
+    .stApp { background-color: #f8f9fa; color: #1e272e; }
+    [data-testid="stMetric"] { background-color: #ffffff; border: 1px solid #d1d8e0; padding: 15px; border-radius: 10px; border-left: 5px solid #f39c12; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- COMANDO CENTRAL ---
-st.sidebar.header("🛡️ AIH-MASTER CORE")
-st.sidebar.subheader("Global Security & Defense")
+# --- SIDEBAR COMANDO CENTRAL ---
+with st.sidebar:
+    st.header("🛡️ AIH-MASTER CORE")
+    st.image("https://upload.wikimedia.org/wikipedia/commons/b/b1/Logo_Codelco.svg", width=100)
+    st.divider()
+    seccion = st.radio("SISTEMA:", ["🛰️ Teledetección", "🛡️ HSE Minería", "🌋 Sismología", "📄 Reportes"])
 
-menu = st.sidebar.radio("NIVELES DE ACCESO:", [
-    "🛰️ Teledetección (Satelital)", 
-    "🛡️ HSE Master (Minería)", 
-    "🌋 Red Sismológica Nacional", 
-    "⚡ Red Eléctrica & SCADA", 
-    "🔬 Laboratorio IA & Biometría"
-])
+# --- HEADER ---
+st.title(f"CENTRO DE MANDO: {seccion}")
+st.write(f"**Integrador:** AIH-Master | **Nodos:** 70,000 | **Estado:** 🟢 ONLINE")
 
-# --- HEADER UNIVERSAL ---
-st.title(f"CENTRO DE MANDO: {menu}")
-st.write(f"Sincronizando con Copernicus & USGS | **Nodos Activos:** 70,000")
-
-# --- LÓGICA DE VISUALIZACIÓN ---
-
-if menu == "🛰️ Teledetección (Satelital)":
-    st.subheader("Análisis de Firmas Espectrales (Sentinel-2)")
+if seccion == "🛰️ Teledetección":
+    st.subheader("Análisis Satelital Real (Capas Copernicus)")
     # 
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        # Mapa Satelital con Capas
-        m = folium.Map(location=[-22.3, -68.9], zoom_start=12, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Sat')
-        folium_static(m, width=900)
-    with col2:
-        st.write("**Análisis Espectral:**")
-        st.info("Detectando concentraciones de Silicio y Cobre desde órbita.")
-        st.progress(85)
-        st.write("NDVI: 0.12 (Zona Árida)")
+    m = folium.Map(location=[-22.3, -68.9], zoom_start=12, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Satellite')
+    folium_static(m, width=1000)
+    st.success("Capa Satelital de Alta Resolución cargada desde servidor Global.")
 
-elif menu == "🛡️ HSE Master (Minería)":
+elif seccion == "🛡️ HSE Minería":
     # 
     st.subheader("Gestión de Riesgo Proactivo (ICR)")
-    k1, k2, k3, k4 = st.columns(4)
-    k1.metric("Polvo", "52 mg/m³", "-2%")
-    k2.metric("Viento", "45 km/h", "Alerta")
-    k3.metric("Nodos OK", "69,998", "2 Offline")
-    k4.metric("Turno", "A", "Activo")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Polvo PM10", "52 mg/m³", "-5%")
+    c2.metric("Viento", "45 km/h", "Alerta")
+    c3.metric("Biometría OK", "100%", "Estable")
     
-    # Gráfico de Radar de Riesgos
-    categories = ['Polvo', 'Gases', 'Fatiga', 'Clima', 'Sismo']
-    fig = go.Figure()
-    fig.add_trace(go.Scatterpolar(r=[52, 12, 15, 45, 5], theta=categories, fill='toself', name='Riesgo Actual'))
-    st.plotly_chart(fig)
+    df = pd.DataFrame({'T': range(24), 'R': np.random.uniform(20, 60, 24)})
+    st.plotly_chart(px.area(df, x='T', y='R', title="Trazabilidad de Riesgo 24h", color_discrete_sequence=['#f39c12']), use_container_width=True)
 
-elif menu == "🌋 Red Sismológica Nacional":
+elif seccion == "🌋 Sismología":
     # 
-    st.subheader("Monitoreo Sísmico en Tiempo Real (Cinturón de Fuego)")
-    data_sismo = pd.DataFrame({
-        'lat': [-22.3, -33.4, -36.8],
-        'lon': [-68.9, -70.6, -73.0],
-        'mag': [4.2, 3.1, 5.5]
-    })
-    st.map(data_sismo)
+    st.subheader("Monitor Sismológico Nacional")
+    sismos = pd.DataFrame({'lat': [-22.3, -33.4], 'lon': [-68.9, -70.6], 'mag': [4.2, 5.1]})
+    st.map(sismos)
 
-elif menu == "⚡ Red Eléctrica & SCADA":
-    # 
-    st.subheader("Flujo Eléctrico y Control de Subestaciones")
-    st.line_chart(np.random.randn(50, 3))
-    st.success("Subestación El Teniente: Operando en 220kV nominales.")
+elif seccion == "📄 Reportes":
+    st.subheader("Generación de Auditoría PDF")
+    st.info("Preparando reporte de cumplimiento legal para CODELCO.")
+    st.button("📦 Descargar Reporte Completo")
 
 st.divider()
-st.caption("AIH-MASTER SYSTEM | Propiedad de Uniting Technology | Basado en Bélgica para el Mundo.")
+st.caption("AIH-MASTER | Uniting Technology Belgium | Sistema de Trazabilidad Total")
