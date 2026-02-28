@@ -2,11 +2,10 @@ streamlit
 pandas
 numpy
 plotly
-streamlit-echarts
-streamlit-extras
 folium
 streamlit-folium
 streamlit-aggrid
 reportlab
 requests
 branca
+pytz
