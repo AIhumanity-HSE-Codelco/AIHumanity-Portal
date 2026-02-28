@@ -5,141 +5,157 @@ import plotly.express as px
 import plotly.graph_objects as go
 from streamlit_folium import folium_static
 import folium
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
+import json
+import base64
 
-# --- 1. CONFIGURACIÓN DE ALTO IMPACTO ---
-st.set_page_config(page_title="AIH-MASTER COMMAND CENTER", layout="wide")
+# --- 1. CONFIGURACIÓN DE NÚCLEO INDUSTRIAL ---
+st.set_page_config(page_title="AIH-MASTER SUPREME COMMAND", layout="wide", initial_sidebar_state="expanded")
 
-# --- 2. BASE DE DATOS MAESTRA (70K NODOS) ---
-MINERIA = {
-    "ZONA NORTE": {"Chuquicamata": [-22.3, -68.9], "Escondida": [-24.2, -69.0], "Collahuasi": [-20.9, -68.6]},
-    "ZONA CENTRO": {"El Teniente": [-34.1, -70.4], "Andina": [-33.1, -70.2], "Los Bronces": [-33.1, -70.3]},
-    "ZONA ATACAMA": {"Salvador": [-26.2, -69.6], "Caserones": [-27.3, -69.3]}
+# --- 2. MOTOR DE TIEMPO Y AUDITORÍA (CHILE) ---
+tz = pytz.timezone('America/Santiago')
+def get_now(): return datetime.now(tz)
+
+# --- 3. BASE DE DATOS DE GOBERNANZA (70K NODOS AIDEEPMINER) ---
+# Clasificación de Riesgo Codelco: Probabilidad vs Consecuencia
+RISK_DRIVERS = ["Fatiga Humana", "Dispersión Polvo", "Falla EPP", "Meteorología Extrema", "Interacción Hombre-Máquina"]
+
+FAENAS_DB = {
+    "CODELCO Norte": {"Chuquicamata": [-22.3, -68.9], "RT": [-22.2, -68.8]},
+    "CODELCO Centro": {"El Teniente": [-34.1, -70.4], "Andina": [-33.1, -70.2]},
+    "BHP / Otros": {"Escondida": [-24.2, -69.0], "Salvador": [-26.2, -69.6]}
 }
 
-# --- 3. ESTILO VIBRANTE (FUCSIA, MORADO, ROJO, AMARILLO) ---
+# --- 4. CSS: INTERFAZ VIBRANTE & AMIGABLE AL RATÓN ---
 st.markdown("""
     <style>
-    /* Fondo amigable y moderno */
-    .stApp { background-color: #ffffff; }
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+    html, body, [class*="st-"] { font-family: 'JetBrains Mono', monospace; background-color: #ffffff; }
     
-    /* Barras de Porcentaje Dinámicas */
-    .risk-bar-bg { width: 100%; background: #f0f2f6; border-radius: 15px; height: 35px; border: 2px solid #eee; overflow: hidden; }
-    .risk-bar-fill { height: 100%; transition: width 0.8s ease-in-out; text-align: center; color: white; font-weight: 800; line-height: 35px; font-size: 18px; }
+    .main-clock { font-size: 55px !important; font-weight: 800; color: #1d1d1f; text-align: center; margin-bottom: 0px; letter-spacing: -2px; }
+    .date-label { font-size: 18px; color: #636e72; text-align: center; margin-bottom: 20px; }
     
-    /* KPIs con colores Apple-Vibrant */
-    [data-testid="stMetric"] { 
-        background: #ffffff; padding: 20px; border-radius: 15px; 
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-bottom: 5px solid #ff00ff; /* Fucsia */
-    }
+    .status-card { background: #f8f9fa; padding: 25px; border-radius: 20px; border-left: 8px solid #ff00ff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    .metric-vibrant { color: #6c5ce7; font-weight: 800; font-size: 2.5rem; }
     
-    /* Títulos y Hover */
-    h1, h2, h3 { color: #2d3436; font-weight: 800; }
-    .stButton>button { 
-        background: linear-gradient(45deg, #6c5ce7, #ff00ff); color: white; border: none; 
-        border-radius: 10px; font-weight: bold; transition: 0.3s;
-    }
-    .stButton>button:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255,0,255,0.4); }
+    /* Risk Progress Bars */
+    .bar-container { width: 100%; background: #dfe6e9; border-radius: 10px; height: 18px; margin: 10px 0; }
+    .bar-fill { height: 100%; border-radius: 10px; transition: 1s ease-in-out; }
+    
+    /* Tooltip & Hover effects */
+    .stButton>button { width: 100%; border-radius: 12px; height: 50px; font-weight: bold; background: linear-gradient(90deg, #6c5ce7, #ff00ff); color: white; border: none; transition: 0.3s; }
+    .stButton>button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(108, 92, 231, 0.4); }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. SIDEBAR: CONTROL DE MANDO ---
+# --- 5. SIDEBAR: OPEN ADMIN CONFIG & GOBERNANZA ---
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/b/b1/Logo_Codelco.svg", width=120)
-    st.title("🛡️ AIH-MASTER")
+    st.image("https://upload.wikimedia.org/wikipedia/commons/b/b1/Logo_Codelco.svg", width=140)
+    st.markdown("### 🛡️ OPEN ADMIN CONFIG")
     
-    tz = pytz.timezone('America/Santiago')
-    st.write(f"⏰ **{datetime.now(tz).strftime('%H:%M:%S')}**")
-    st.divider()
-    
-    acceso = st.radio("MODO AUDITORÍA:", ["MASTER GLOBAL", "FAENA LOCAL"])
-    zona = st.selectbox("📍 Seleccione Sector:", list(MINERIA.keys()))
-    faena_sel = st.selectbox("🏗️ Unidad Minera:", list(MINERIA[zona].keys()))
-    coords = MINERIA[zona][faena_sel]
-
-# --- 5. MOTOR DE RIESGO (NODOS ACTIVOS) ---
-np.random.seed(sum(map(ord, faena_sel)))
-viento = np.random.randint(10, 90)
-polvo = np.random.randint(15, 85)
-riesgo_calc = int((viento * 0.4) + (polvo * 0.6))
-
-# --- 6. INTERFAZ PRINCIPAL: ENTORNO MAXIMIZADO ---
-st.title(f"🚀 DASHBOARD OPERATIVO: {faena_sel.upper()}")
-st.write(f"**Gobernanza Proactiva de 70,000 Nodos** | ID Faena: {hash(faena_sel)}")
-
-# BARRAS DE PORCENTAJE VIBRANTES
-col_b1, col_b2 = st.columns(2)
-with col_b1:
-    color_p = "#ff00ff" if riesgo_calc > 70 else "#6c5ce7" if riesgo_calc > 40 else "#00cec9"
-    st.markdown(f"**Índice de Riesgo (ICR): {riesgo_calc}%**")
-    st.markdown(f'<div class="risk-bar-bg"><div class="risk-bar-fill" style="width: {riesgo_calc}%; background: {color_p};">{riesgo_calc}%</div></div>', unsafe_allow_html=True)
-
-with col_b2:
-    viento_p = int((viento/90)*100)
-    st.markdown(f"**Saturación de Viento: {viento} km/h**")
-    st.markdown(f'<div class="risk-bar-bg"><div class="risk-bar-fill" style="width: {viento_p}%; background: #fdcb6e;">{viento_p}%</div></div>', unsafe_allow_html=True)
-
-st.divider()
-
-# KPIs CON COLORES (MORADOS, FUCSIA, AMARILLO)
-c1, c2, c3, c4 = st.columns(4)
-with c1: st.metric("🌪️ Polvo PM10", f"{polvo} mg/m³", delta="NORMAL", delta_color="normal")
-with c2: st.metric("🌬️ Viento Real", f"{viento} km/h", delta="ALERTA", delta_color="inverse")
-with c3: st.metric("📍 GPS Nodos", "70,000", delta="ONLINE", delta_color="normal")
-with c4: st.metric("💓 Biometría", "98.2%", delta="SINCRO", delta_color="normal")
-
-st.divider()
-
-# --- 7. MODULOS VISUALES (RECONSTRUIDOS) ---
-t1, t2, t3 = st.tabs(["📊 ANÁLISIS HSE", "🛰️ TELEDETECCIÓN GPS", "📑 AUDITORÍA & CORREO"])
-
-with t1:
-    col_rad, col_line = st.columns([1, 1])
-    with col_rad:
-        st.subheader("🎯 Radar de Riesgos Críticos")
-        
-        fig_rad = go.Figure(go.Scatterpolar(
-            r=[polvo, viento, 95, 20, riesgo_calc],
-            theta=['Polvo', 'Viento', 'Bio', 'Gases', 'Riesgo'],
-            fill='toself', fillcolor='rgba(255, 0, 255, 0.3)', line_color='#ff00ff'
-        ))
-        st.plotly_chart(fig_rad, use_container_width=True)
-    
-    with col_line:
-        st.subheader("📈 Tendencia Predictiva")
-        df_hist = pd.DataFrame({'Hora': range(24), 'Riesgo': np.random.randint(10, 90, 24)})
-        fig_line = px.area(df_hist, x='Hora', y='Riesgo', color_discrete_sequence=['#6c5ce7'])
-        st.plotly_chart(fig_line, use_container_width=True)
-
-with t2:
-    st.subheader(f"🗺️ Ubicación GPS de Faena: {faena_sel}")
-    
-    m = folium.Map(location=coords, zoom_start=14, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Satellite')
-    folium.Circle(coords, radius=800, color='#ff00ff', fill=True, popup="ÁREA DE INFLUENCIA AIH").add_to(m)
-    folium_static(m, width=1000, height=450)
-
-with t3:
-    st.subheader("💼 Módulo de Auditoría Máster")
-    st.info("Correo Saliente Configurado: **aeserviseu@gmail.com**")
-    
-    df_audit = pd.DataFrame([{
-        "Registro": f"AIH-{np.random.randint(1000, 9999)}",
-        "Faena": faena_sel,
-        "Responsable": "SuperUser_AIH",
-        "Hora": datetime.now(tz).strftime('%H:%M:%S'),
-        "Estado": "APROBADO"
-    }])
-    st.table(df_audit)
+    # RELOJ AGRANDADO
+    st.markdown(f"<p class='main-clock'>{get_now().strftime('%H:%M')}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p class='date-label'>{get_now().strftime('%A, %d de %B %Y')}</p>", unsafe_allow_html=True)
     
     st.divider()
-    c_d1, c_d2 = st.columns(2)
-    with c_d1:
-        st.download_button("📥 Descargar Reporte HSE (PDF)", data=df_audit.to_csv(), file_name="auditoria.csv")
-    with c_d2:
-        dest = st.text_input("Enviar Auditoría a:", "gerencia@codelco.cl")
-        if st.button("📧 Despachar vía aeserviseu@gmail.com"):
-            st.success(f"Reporte enviado exitosamente a {dest}")
+    op_mode = st.selectbox("CONTROL ROOM MODE", ["HSE CONTROL ROOM", "ADMS TACTICAL", "WORKER SAFETY CORE"])
+    
+    st.subheader("📍 Despliegue Operativo")
+    region = st.selectbox("Región Operativa", list(FAENAS_DB.keys()))
+    unidad = st.selectbox("Unidad Minera", list(FAENAS_DB[region].keys()))
+    coords = FAENAS_DB[region][unidad]
+    
+    st.divider()
+    st.markdown("### 📥 AUDIT-READY EXPORTS")
+    if st.button("EXPORT JSON"): st.download_button("Confirme JSON", "{}", "audit.json")
+    if st.button("EXPORT CSV"): st.download_button("Confirme CSV", "id,risk,who", "audit.csv")
+    if st.button("EXPORT HSE LOG"): st.success("Log General Generado")
+
+# --- 6. MOTOR DE ANÁLISIS DE RIESGO (PAST & NEW DATA) ---
+# Simulación de 70k nodos procesando data histórica y actual
+np.random.seed(datetime.now().hour)
+hist_data = pd.DataFrame({
+    'timestamp': [get_now() - timedelta(minutes=i*10) for i in range(24)],
+    'pm10': np.random.normal(50, 15, 24),
+    'viento': np.random.normal(30, 10, 24),
+    'risk_score': np.random.randint(20, 85, 24)
+})
+
+current_risk = int(hist_data['risk_score'].iloc[0])
+pm10 = int(hist_data['pm10'].iloc[0])
+pm25 = int(pm10 * 0.4)
+viento_kmh = int(hist_data['viento'].iloc[0])
+
+# --- 7. PANEL PRINCIPAL: CODELCO OBJECTIVE ZERO ---
+st.title(f"🚀 {unidad.upper()} | OPERATIONAL RISK CENTER")
+st.markdown(f"**AIDeepMiner Governance** | Sensor Fusion: Active | Latency: 4ms")
+
+# TOP RISK PROBABILITY: WHERE / WHO / WHAT
+c_zero1, c_zero2, c_zero3 = st.columns(3)
+with c_zero1:
+    st.markdown(f"<div class='status-card'><strong>TOP RISK DRIVER</strong><br><span style='color:#ff3b30; font-size:1.5rem;'>{RISK_DRIVERS[0]}</span><br>Probability: {current_risk}%</div>", unsafe_allow_html=True)
+with c_zero2:
+    st.markdown(f"<div class='status-card'><strong>CRITICAL ZONE (WHERE)</strong><br><span style='color:#6c5ce7; font-size:1.5rem;'>Sector Chancado 04</span><br>Nodos Activos: 450</div>", unsafe_allow_html=True)
+with c_zero3:
+    st.markdown(f"<div class='status-card'><strong>RESPONSIBLE (WHO)</strong><br><span style='color:#f39c12; font-size:1.5rem;'>Turno B - Cuadrilla 12</span><br>Status: Monitoreado</div>", unsafe_allow_html=True)
 
 st.divider()
-st.caption("AIH-MASTER COMMAND v10.0 | Blindado, Colorido e Interactivo | Uniting Technology Belgium")
+
+# --- 8. MÓDULOS ESPECIALIZADOS (TABS) ---
+tab_env, tab_safety, tab_adms, tab_map = st.tabs([
+    "🍃 ENVIRONMENTAL FUSION", 
+    "👷 WORKER SAFETY CORE", 
+    "💧 ADMS TACTICAL",
+    "🛰️ SAT-SURVEILLANCE"
+])
+
+# 8.1 ENVIRONMENTAL FUSION CORE
+with tab_env:
+    st.subheader("Meteo & Dust Dispersion Analysis")
+    col_e1, col_e2, col_e3 = st.columns(3)
+    col_e1.metric("PM10 Ground", f"{pm10} µg/m³", "-5%")
+    col_e2.metric("PM2.5 Respirable", f"{pm25} µg/m³", "+2%")
+    col_e3.metric("Meteorología", f"{viento_kmh} km/h", "NW Direction")
+    
+    # Gráfico de dispersión histórica
+    fig_env = px.area(hist_data, x='timestamp', y=['pm10', 'pm25'], title="Fusión de Material Particulado (24h)", color_discrete_map={"pm10": "#ff00ff", "pm25": "#6c5ce7"})
+    st.plotly_chart(fig_env, use_container_width=True)
+
+# 8.2 WORKER SAFETY CORE (EPP & FALL DETECTION)
+with tab_safety:
+    st.subheader("AI-PPE & Biometric Monitoring")
+        col_s1, col_s2 = st.columns(2)
+    with col_s1:
+        st.info("PPE Status: **WORN ON**")
+        st.markdown("**Fall Detection Algorithm:** STANDBY (Active)")
+        st.progress(95)
+        st.caption("Cumplimiento de Casco/Guantes/Lentes")
+    with col_s2:
+        st.error("Alert: **WORN OFF** detected in Zone 3")
+        st.markdown("**Worker ID:** AIH-99283 (Contratista)")
+        st.button("Trigger Immediate Warning")
+
+# 8.3 ADMS TACTICAL RESPONSE
+with tab_adms:
+    st.subheader("Mitigation & Forecast Response")
+    col_a1, col_a2 = st.columns([1, 2])
+    with col_a1:
+        st.markdown("### Mitigation Strategy")
+        st.write("- **Aspersores:** ACTIVOS (70%)")
+        st.write("- **Camiones Aljibe:** 2 en ruta")
+        st.write("- **Drones ADMS:** Desplegados")
+    with col_a2:
+        st.warning("FORECAST: High Dust Peak in 20 mins due to wind shift (35km/h NW)")
+        st.metric("Fail Detection Rate", "0.02%", "Stable")
+
+# 8.4 SAT-SURVEILLANCE
+with tab_map:
+    st.subheader(f"70,000 Nodos en {unidad}")
+    m = folium.Map(location=coords, zoom_start=15, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Sat')
+    folium.Circle(coords, radius=400, color='#ff00ff', fill=True, popup="FUSION CORE RADIUS").add_to(m)
+    folium_static(m, width=1100, height=500)
+
+# --- 9. FOOTER AUDIT-READY ---
+st.divider()
+st.caption("AIH-MASTER COMMAND v11.0 | Objective Zero Risk | aeserviseu@gmail.com | Uniting Technology Belgium")
