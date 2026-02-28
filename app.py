@@ -1,37 +1,47 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.express as px
+from streamlit_extras.metric_cards import style_metric_cards
 
-# --- CONFIGURACIÓN DE INTERFAZ ---
-st.set_page_config(
-    page_title="AIHumanity - HSE Master Control",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# --- CONFIGURACIÓN DE PÁGINA ---
+st.set_page_config(page_title="AIHumanity HSE", page_icon="🛡️", layout="wide")
 
-# --- ESTILO PERSONALIZADO (CSS) ---
-st.markdown("""
-    <style>
-    .main { background-color: #0e1117; }
-    .stMetric { background-color: #161b22; padding: 15px; border-radius: 10px; border: 1px solid #30363d; }
-    .footer { position: fixed; left: 0; bottom: 0; width: 100%; background-color: #0d1117; color: #8b949e; text-align: center; padding: 5px; font-size: 12px; border-top: 1px solid #30363d; }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- MÓDULO 1: IDENTIDAD CORPORATIVA ---
-with st.container():
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        st.title("🛡️ AIHumanity - HSE Master Control")
-        st.write("### **Organization:** Codelco")
-    with col2:
-        st.markdown(f"**Version:** `v2.0.4-TRL3`  \n**Integrator:** `AIH-Master`  \n**Status:** 🟢 ONLINE")
-
+# --- MÓDULO 1: IDENTIDAD ---
+st.title("🛡️ AIHumanity - HSE Master Control")
+st.markdown("### **Organization:** Codelco | **Version:** v2.0.4-TRL3")
+st.write("**Integrator:** AIH-Master | **Status:** 🟢 ONLINE")
 st.divider()
 
-# --- ESPACIO PARA SIGUIENTES MÓDULOS ---
-st.info("SISTEMA CONFIGURADO: Esperando carga de Módulo 2 (Telemetría y Nodos)")
+# --- MÓDULO 2: TELEMETRÍA ELEGANTE ---
+st.subheader("📊 Telemetría de Riesgo (AIDeepMiner)")
+
+col1, col2, col3 = st.columns(3)
+col1.metric(label="💨 Polvo PM10", value="32 mg/m³", delta="-2.1%")
+col2.metric(label="⚠️ Gases CO/NO2", value="12 ppm", delta="Normal")
+col3.metric(label="💓 Biometría", value="78 BPM", delta="+2 BPM")
+
+# Aplicar diseño Pro a las tarjetas
+style_metric_cards(background_color="#1d2129", border_left_color="#00ff00", border_size_px=1)
+
+# --- MÓDULO 3: GRÁFICO DE ALTA GAMA ---
+st.markdown("---")
+st.subheader("📈 Tendencia Predictiva de Exposición")
+
+# Crear datos simulados para el gráfico
+df_sim = pd.DataFrame({
+    'Tiempo': pd.date_range(start='2026-02-28', periods=24, freq='H'),
+    'Nivel de Riesgo': np.random.uniform(10, 45, 24)
+})
+
+# Crear gráfico interactivo con Plotly
+fig = px.area(df_sim, x='Tiempo', y='Nivel de Riesgo', 
+              title="Análisis Proactivo de Seguridad (ICR)",
+              color_discrete_sequence=['#00cc96'])
+fig.update_layout(template="plotly_dark", plot_bgcolor='rgba(0,0,0,0)')
+
+st.plotly_chart(fig, use_container_width=True)
 
 # --- PIE DE PÁGINA ---
-st.markdown('<div class="footer">By Uniting Technology | Belgium</div>', unsafe_allow_html=True)
+st.markdown("---")
+st.caption("By Uniting Technology | Belgium")
