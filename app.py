@@ -1,61 +1,62 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <DHT.h>
 
-# --- CONFIGURACIÓN TÉCNICA ---
-st.set_page_config(page_title="AIHUMANITY MASTER", layout="wide")
+// --- DATOS DE TU RED ---
+const char* ssid = "telenet 5E4ED";
+const char* password = "WPJQbZnb9aHM";
 
-# Inicialización de estado para persistencia
-if 'sync' not in st.session_state: st.session_state.sync = False
+// --- DIRECCIÓN DE TU PORTAL AIHUMANITY ---
+const char* serverName = "https://aihumanity-app-aihumanity-hse.streamlit.app/api/data";
 
-st.markdown("""
-    <style>
-    .apple-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-    .status-dot { height: 12px; width: 12px; background-color: #34c759; border-radius: 50%; display: inline-block; margin-right: 10px; }
-    </style>
-""", unsafe_allow_html=True)
+#define PIN_LED 2
+#define PIN_LUZ 32
+#define PIN_TEMP 26
+#define PIN_IR 25
+#define DHTTYPE DHT11
 
-# --- CABECERA ---
-st.title("🛰️ Gobernanza AIHumanity")
-st.write(f"Conexión: **telenet 5E4ED** | Nodo: **ESP32 AIDeepMiner**")
+DHT dht(PIN_TEMP, DHTTYPE);
 
-if st.button("🔄 SINCRONIZAR CON HARDWARE"):
-    st.session_state.sync = True
-    st.balloons()
+void setup() {
+  Serial.begin(115200);
+  pinMode(PIN_LED, OUTPUT);
+  pinMode(PIN_IR, INPUT);
+  dht.begin();
 
-# --- BARRA DE CONECTIVIDAD (33.3% x 3) ---
-pines_activos = 3 if st.session_state.sync else 0
-total_conn = int((pines_activos / 3) * 100)
+  WiFi.begin(ssid, password);
+  Serial.println("Conectando a Telenet...");
+  
+  // Si sigue parpadeando aquí, acerca el ESP32 al Router
+  while (WiFi.status() != WL_CONNECTED) {
+    digitalWrite(PIN_LED, !digitalRead(PIN_LED));
+    delay(200);
+  }
+  
+  digitalWrite(PIN_LED, HIGH); // LUZ AZUL FIJA = ÉXITO
+  Serial.println("Conectado a Internet OK");
+}
 
-st.subheader(f"Conectividad Total: {total_conn}%")
-st.progress(total_conn / 100)
+void loop() {
+  if(WiFi.status() == WL_CONNECTED){
+    HTTPClient http;
+    http.begin(serverName); // Redirección al portal
+    http.addHeader("Content-Type", "application/json");
 
-# --- PANEL DE DATOS REAL-TIME ---
-col_l, col_t, col_i = st.columns(3)
+    // Datos reales de tus pines
+    int luz = analogRead(PIN_LUZ);
+    float t = dht.readTemperature();
+    bool puesto = (digitalRead(PIN_IR) == LOW); 
 
-with col_l:
-    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
-    st.metric("LUZ (D32)", f"{np.random.randint(600, 900) if st.session_state.sync else 0} lx")
-    st.caption("Fotorresistencia Activa")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with col_t:
-    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
-    st.metric("TEMPERATURA (D26)", f"{25.5 + np.random.uniform(-0.5, 0.5) if st.session_state.sync else 0.0:.1f} °C")
-    st.caption("DHT11 Sincronizado")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with col_i:
-    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
-    if st.session_state.sync:
-        st.success("D25: CASCO PUESTO")
-        st.markdown("<span class='status-dot'></span> Transmitiendo vía TCP/IP", unsafe_allow_html=True)
-    else:
-        st.error("D25: SIN CONTACTO")
-    st.caption("Sensor Infrarrojo de Presencia")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-
-
-st.divider()
-st.caption("AIH-MASTER v29.0 | Uniting Technology Belgium | Ready for TRL4 Deployment")
+    String json = "{\"node\":\"AID-01\",\"luz\":" + String(luz) + 
+                  ",\"temp\":" + String(t) + ",\"puesto\":" + String(puesto) + "}";
+    
+    // El "Latido" azul al enviar
+    digitalWrite(PIN_LED, LOW);
+    int httpResponseCode = http.POST(json); 
+    digitalWrite(PIN_LED, HIGH);
+    
+    Serial.println("Código Respuesta HTTP: " + String(httpResponseCode));
+    http.end();
+  }
+  delay(2000); 
+}
