@@ -1,48 +1,26 @@
 import streamlit as st
-import pandas as pd
 
-# --- AIH-MASTER: MONITOR DE NODOS SINCRONIZADOS ---
-st.set_page_config(page_title="AIH-MASTER | LIVE SYNC", layout="wide")
+# PANEL CENTRAL DE GOBERNANZA
+st.markdown('<h1 style="text-align:center;">🛰️ AIHumanity Central Node</h1>', unsafe_allow_html=True)
 
-st.markdown("""
-    <style>
-    .apple-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 8px 30px rgba(0,0,0,0.03); margin-bottom: 20px; }
-    .status-online { color: #34c759; font-weight: 600; font-size: 14px; }
-    </style>
-""", unsafe_allow_html=True)
+col1, col2, col3 = st.columns(3)
 
-# CABECERA DE CONECTIVIDAD
-st.title("🌐 Network Governance Center")
-st.markdown(f"**SSID Activo:** telenet 5E4ED | **Gateway:** AIHumanity Cloud")
+with col1:
+    st.metric("Luz (D32)", "740 pts", delta="Estable")
+    st.write("Fotorresistencia Activa")
 
-col_net, col_sensors = st.columns([1, 2])
+with col2:
+    st.metric("Temperatura (D26)", "26.8°C", delta="Normal")
+    st.write("Módulo DHT11 Sync")
 
-with col_net:
-    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
-    st.subheader("Estado del Nodo")
-    st.write("ID: **AIDeepMiner-01**")
-    st.markdown("Status: <span class='status-online'>● ONLINE</span>", unsafe_allow_html=True)
-    st.write("IP: 192.168.1.105")
-    st.button("Reiniciar Conexión")
-    st.markdown('</div>', unsafe_allow_html=True)
+with col3:
+    if casco_puesto: # Lógica de D25
+        st.success("CASCO: PUESTO")
+    else:
+        st.error("CASCO: DESCONECTADO")
+    st.write("Infrarrojo IR D25")
 
-with col_sensors:
-    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
-    st.subheader("Sensores Activados (Telemetry)")
-    
-    # Mapeo de Sensores en el Casco
-    metrics = {
-        "Módulo Polvo (PM10)": "ACTIVO",
-        "Biometría (HR)": "ACTIVO",
-        "Giroscopio (Caídas)": "SINCRO",
-        "GPS Diferencial": "BUSCANDO..."
-    }
-    
-    for sensor, state in metrics.items():
-        st.write(f"{sensor}: **{state}**")
-    
-    st.divider()
-    st.info("El nodo está transmitiendo exitosamente a través del Web Server configurado.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
-st.caption("AIH-MASTER v24.0 | Protocolo de Conectividad TRL4 | Uniting Technology Belgium")
+
+st.divider()
+st.info("Protocolo de Red: telenet 5E4ED | Nodo: AIDeepMiner-ESP32")
