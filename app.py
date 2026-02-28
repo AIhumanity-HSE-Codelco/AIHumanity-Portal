@@ -5,104 +5,120 @@ import plotly.express as px
 import plotly.graph_objects as go
 from streamlit_folium import folium_static
 import folium
+from datetime import datetime
 
-# --- CONFIGURACIÓN ESTRUCTURAL ---
-st.set_page_config(page_title="AIH-MASTER CONTROL GLOBAL", layout="wide")
+# --- CONFIGURACIÓN DE SEGURIDAD Y BLINDAJE ---
+st.set_page_config(page_title="AIH-MASTER GLOBAL CORE", layout="wide")
 
-# --- BASE DE DATOS MAESTRA DE MINERÍA CHILE ---
-MINERIA_CHILE = {
-    "Tarapacá": ["Cerro Colorado (BHP)", "Quebrada Blanca (Teck)", "Collahuasi"],
-    "Antofagasta": ["Escondida (BHP)", "Chuquicamata (Codelco)", "Radomiro Tomic (Codelco)", "Spence (BHP)", "Sierra Gorda", "Centinela", "El Abra", "Gabriela Mistral (Codelco)", "Lomas Bayas", "Zaldívar"],
-    "Atacama": ["Caserones", "Candelaria", "Salvador (Codelco)", "La Coipa", "Maricunga", "Cerro Negro Norte", "Los Colorados", "Salares Norte"],
-    "Coquimbo": ["Los Pelambres", "Carmen de Andacollo", "El Romeral"],
-    "Valparaíso/RM": ["Andina (Codelco)", "Los Bronces", "El Soldado", "Chagres"],
-    "O'Higgins": ["El Teniente (Codelco)", "Minera Florida"],
-    "No Metálica/Litio": ["SQM Salar de Atacama", "Nueva Victoria", "Pampa Blanca", "Surire (Quiborax)"]
-}
+# --- MOTOR DE DATOS JERÁRQUICO (Simulando Base de Datos Segregada) ---
+def get_faena_data(nombre_faena):
+    """
+    Simula la captura y gobernanza de múltiples señales de campo.
+    Construye el Indicador Compuesto de Riesgo Proactivo (ICRP).
+    """
+    np.random.seed(sum(map(ord, nombre_faena))) # Semilla única por faena
+    
+    # Señales de Campo (Raw Signals)
+    polvo = np.random.randint(20, 85)
+    viento = np.random.randint(5, 70)
+    biometria = np.random.uniform(90, 100) # Porcentaje de personal apto
+    sismos = np.random.uniform(0, 5)
+    
+    # Cálculo de Indicador Compuesto (Gobernanza)
+    # El riesgo aumenta exponencialmente si el viento y el polvo suben juntos
+    icrp = (polvo * 0.4) + (viento * 0.3) + ((100 - biometria) * 2) + (sismos * 10)
+    
+    return {
+        "polvo": polvo,
+        "viento": viento,
+        "biometria": round(biometria, 1),
+        "sismos": round(sismos, 1),
+        "icrp": round(min(icrp, 100), 1)
+    }
 
-# --- ESTILO CSS AVANZADO ---
-st.markdown("""
-    <style>
-    .stApp { background-color: #f8f9fa; }
-    .kpi-card { background-color: white; padding: 20px; border-radius: 15px; border-left: 10px solid #f39c12; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .stop-work-red { background-color: #ff4b4b; color: white; padding: 20px; border-radius: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite; }
-    @keyframes pulse { 0% {opacity: 1;} 50% {opacity: 0.7;} 100% {opacity: 1;} }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- SIDEBAR: SELECTOR JERÁRQUICO ---
+# --- LÓGICA DE ACCESO (ENTORNOS ÚNICOS) ---
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/b/b1/Logo_Codelco.svg", width=100)
-    st.title("🛡️ CONTROL MAESTRO")
-    region = st.selectbox("📍 Seleccione Región:", list(MINERIA_CHILE.keys()))
-    faena = st.selectbox("🏗️ Seleccione Faena:", MINERIA_CHILE[region])
+    st.image("https://upload.wikimedia.org/wikipedia/commons/b/b1/Logo_Codelco.svg", width=120)
+    st.title("🛡️ AIH-GATEWAY")
+    
+    # Simulación de Login/Filtro por Faena
+    st.subheader("Autenticación de Entorno")
+    faena_activa = st.selectbox("Seleccione su Unidad Minera:", 
+        ["Chuquicamata", "El Teniente", "Escondida", "Collahuasi", "Los Bronces", "SQM Salar"])
+    
     st.divider()
-    st.info(f"Conectado a: {faena}\nNodos AIDeepMiner: 70k Activos")
+    st.markdown(f"**Usuario:** HSE_Manager_{faena_activa.split()[0]}")
+    st.markdown(f"**Acceso:** Nivel de Seguridad 4")
 
-# --- HEADER DINÁMICO ---
-st.title(f"CENTRO DE CONTROL HSE: {faena.upper()}")
-st.caption(f"Integrador: AIH-Master | Auditoría en Tiempo Real | Ubicación: Región de {region}")
+# --- CAPTURA DE SEÑALES EN TIEMPO REAL ---
+data = get_faena_data(faena_activa)
 
-# --- PESTAÑAS DE VISUALIZACIÓN ---
-tab_dash, tab_map, tab_admin = st.tabs(["📊 DASHBOARD DE RIESGOS", "🛰️ TELEDETECCIÓN", "⚙️ GESTIÓN DE FAENAS"])
+# --- PANEL DE CONTROL PRINCIPAL (ALARMAS) ---
+st.title(f"PORTAL OPERATIVO: {faena_activa.upper()}")
+st.caption(f"Gobernanza de Datos Proactiva | AIH-Master Core v4.0 | ID_FAENA: {hash(faena_activa)}")
 
-with tab_dash:
-    # FILA 1: KPIs con Iconos
-    c1, c2, c3, c4 = st.columns(4)
-    riesgo_val = np.random.randint(10, 95)
-    
-    with c1: st.metric("💨 Polvo PM10", f"{np.random.randint(30,65)} mg/m³", "AIDeepMiner")
-    with c2: st.metric("🌬️ Viento", f"{np.random.randint(10,80)} km/h", "Sismología")
-    with c3: st.metric("💓 Biometría", "98% OK", "IA Humana")
-    with c4: st.metric("📉 Índice Riesgo", f"{riesgo_val}%")
+# Semáforo de Riesgo Compuesto
+if data['icrp'] >= 75:
+    color_alerta = "#FF0000" # ROJO
+    msg = "🛑 STOP WORK ORDERED: Riesgo Compuesto Crítico"
+    st.error(msg)
+elif data['icrp'] >= 45:
+    color_alerta = "#FFD700" # AMARILLO
+    msg = "⚠️ ALERTA PREVENTIVA: Monitoreo de Señales en Curso"
+    st.warning(msg)
+else:
+    color_alerta = "#00FF00" # VERDE
+    msg = "🟢 OPERACIÓN NORMAL: Parámetros bajo control"
+    st.success(msg)
 
-    st.divider()
-
-    # FILA 2: STOP TO WORK HSE INDICATOR
-    col_stop, col_graph = st.columns([1, 2])
-    
-    with col_stop:
-        st.subheader("🛡️ Estatus Operativo")
-        if riesgo_val > 75:
-            st.markdown(f"<div class='stop-work-red'>🛑 STOP WORK ORDERED<br>Riesgo Crítico en {faena}</div>", unsafe_allow_html=True)
-            st.error("Protocolo HSE: Evacuación de niveles críticos y cese de carguío.")
-        else:
-            st.success(f"🟢 OPERACIÓN SEGURA\nIndices dentro de norma en {faena}.")
-        
-        # Medidor de Riesgo
-        fig_gauge = go.Figure(go.Indicator(
-            mode = "gauge+number",
-            value = riesgo_val,
-            title = {'text': "Nivel de Alerta HSE"},
-            gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': "orange"},
-                     'steps': [{'range': [0, 50], 'color': "green"}, {'range': [50, 75], 'color': "yellow"}, {'range': [75, 100], 'color': "red"}]}
-        ))
-        fig_gauge.update_layout(height=250, margin=dict(l=20, r=20, t=50, b=20))
-        st.plotly_chart(fig_gauge, use_container_width=True)
-
-    with col_graph:
-        st.subheader("📈 Proyección de Riesgo Proactivo")
-        df_risk = pd.DataFrame({'Hora': range(12), 'Riesgo': np.random.uniform(20, riesgo_val+10, 12)})
-        st.plotly_chart(px.line(df_risk, x='Hora', y='Riesgo', title="Trazabilidad 12h", color_discrete_sequence=['#f39c12']), use_container_width=True)
-
-with tab_map:
-    st.subheader(f"🛰️ Visualización Satelital: Sector {faena}")
-    # Coordenadas simuladas para el ejemplo
-    m = folium.Map(location=[-22.3, -68.9], zoom_start=13, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Sat')
-    folium.Marker([-22.3, -68.9], popup=f"Punto Cero {faena}", icon=folium.Icon(color='red', icon='warning')).add_to(m)
-    folium_static(m, width=1100)
-
-with tab_admin:
-    st.subheader("📂 Directorio de Faenas con Hipervínculos")
-    # Cuadro de faenas con iconos y nombres
-    data_list = []
-    for reg, faenas in MINERIA_CHILE.items():
-        for f in faenas:
-            data_list.append({"Región": reg, "Faena": f, "Link": "🌐 Acceso Nodo", "Status": "🟢 Conectado"})
-    
-    df_faenas = pd.DataFrame(data_list)
-    st.dataframe(df_faenas, use_container_width=True)
-    st.info("💡 Haga clic en la faena en el menú lateral para cargar sus AIDeepMiners específicos.")
+# --- VISUALIZACIÓN DE SEÑALES CORRELACIONADAS ---
+col1, col2, col3, col4 = st.columns(4)
+with col1: st.metric("💨 Polvo (PM10)", f"{data['polvo']} mg/m³")
+with col2: st.metric("🌬️ Viento (Señal)", f"{data['viento']} km/h")
+with col3: st.metric("💓 Bio-Status", f"{data['biometria']}%")
+with col4: st.metric("🛰️ Sismología", f"{data['sismos']} Mw")
 
 st.divider()
-st.caption("AIH-MASTER CONTROL | Uniting Technology Belgium | Sistema de Auditoría Legal y Proactiva")
+
+# --- GRÁFICO DE RIESGO PROGRESIVO ---
+c_left, c_right = st.columns([2, 1])
+
+with c_left:
+    st.subheader("📈 Correlación de Riesgo Progresivo (ICRP)")
+    # 
+    # Generar tendencia basada en la señal de la faena
+    history = pd.DataFrame({
+        'Tiempo (min)': np.arange(0, 60, 5),
+        'Riesgo Compuesto': np.random.uniform(data['icrp']-10, data['icrp']+5, 12)
+    })
+    fig = px.area(history, x='Tiempo (min)', y='Riesgo Compuesto', 
+                  color_discrete_sequence=[color_alerta])
+    fig.update_layout(template="plotly_white", yaxis_range=[0, 100])
+    st.plotly_chart(fig, use_container_width=True)
+
+with c_right:
+    st.subheader("🎯 Matriz de Gobernanza")
+    # Gráfico de radar para ver qué señal está empujando el riesgo
+    categories = ['Polvo', 'Viento', 'Biometría', 'Sismos', 'Infraest.']
+    fig_radar = go.Figure()
+    fig_radar.add_trace(go.Scatterpolar(
+        r=[data['polvo'], data['viento'], 100-data['biometria'], data['sismos']*20, 30],
+        theta=categories, fill='toself', name='Perfil de Riesgo',
+        line_color=color_alerta
+    ))
+    fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False)
+    st.plotly_chart(fig_radar, use_container_width=True)
+
+# --- MAPA SATELITAL DE NODOS (AISLADO) ---
+st.subheader("📍 Despliegue de Nodos AIDeepMiner en Faena")
+m = folium.Map(location=[-22.3, -68.9], zoom_start=14, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Sat')
+# Solo mostrar nodos de esta faena
+for i in range(10):
+    folium.CircleMarker(
+        location=[-22.3 + np.random.normal(0, 0.005), -68.9 + np.random.normal(0, 0.005)],
+        radius=5, color=color_alerta, fill=True
+    ).add_to(m)
+folium_static(m, width=1100)
+
+st.divider()
+st.caption("PROPIEDAD INTELECTUAL AIHUMANITY | ACCESO RESTRINGIDO POR FAENA")
