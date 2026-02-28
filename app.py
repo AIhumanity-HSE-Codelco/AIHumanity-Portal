@@ -1,28 +1,37 @@
 import streamlit as st
-import time
+import pandas as pd
+import numpy as np
 
-# Forzado de configuración para romper caché
-st.set_page_config(page_title="AIH v2.0", layout="wide")
+# --- CONFIGURACIÓN DE INTERFAZ ---
+st.set_page_config(
+    page_title="AIHumanity - HSE Master Control",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# DISEÑO CORPORATIVO AIHUMANITY (Fondo Blanco, Letras Negras, Acentos Rojos)
+# --- ESTILO PERSONALIZADO (CSS) ---
 st.markdown("""
     <style>
-    .stApp { background-color: #FFFFFF !important; }
-    h1 { color: #1A1A1A !important; border-bottom: 4px solid #FF4B4B; }
-    .card { background-color: #F0F2F6; padding: 20px; border-radius: 10px; border: 1px solid #D1D5DB; color: #1A1A1A; }
+    .main { background-color: #0e1117; }
+    .stMetric { background-color: #161b22; padding: 15px; border-radius: 10px; border: 1px solid #30363d; }
+    .footer { position: fixed; left: 0; bottom: 0; width: 100%; background-color: #0d1117; color: #8b949e; text-align: center; padding: 5px; font-size: 12px; border-top: 1px solid #30363d; }
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown("<h1>🛡️ AIHUMANITY: MISSION CONTROL v2.0</h1>", unsafe_allow_html=True)
-st.write("### LOG: SYSTEM UPDATED - TRL3 STATUS")
+# --- MÓDULO 1: IDENTIDAD CORPORATIVA ---
+with st.container():
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.title("🛡️ AIHumanity - HSE Master Control")
+        st.write("### **Organization:** Codelco")
+    with col2:
+        st.markdown(f"**Version:** `v2.0.4-TRL3`  \n**Integrator:** `AIH-Master`  \n**Status:** 🟢 ONLINE")
 
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown('<div class="card"><b>AIDeepMiner Node</b><br>Status: ONLINE<br>Mode: Simulation</div>', unsafe_allow_html=True)
+st.divider()
 
-with col2:
-    st.markdown('<div class="card"><b>ADMS Module</b><br>Dust Level: 14.5 mg/m³<br>Action: STABLE</div>', unsafe_allow_html=True)
+# --- ESPACIO PARA SIGUIENTES MÓDULOS ---
+st.info("SISTEMA CONFIGURADO: Esperando carga de Módulo 2 (Telemetría y Nodos)")
 
-# Auto-refresco para mantener el túnel vivo
-time.sleep(2)
-st.rerun()
+# --- PIE DE PÁGINA ---
+st.markdown('<div class="footer">By Uniting Technology | Belgium</div>', unsafe_allow_html=True)
