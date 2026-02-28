@@ -8,128 +8,114 @@ import folium
 from datetime import datetime
 import pytz
 
-# --- 1. CONFIGURACIÓN DE NÚCLEO (OPTIMIZADO PARA MÓVIL) ---
-st.set_page_config(page_title="AIH-MASTER GOLD", layout="wide")
+# --- 1. CONFIGURACIÓN DEL SISTEMA ---
+st.set_page_config(page_title="AIH-MASTER SUPERUSER", layout="wide")
 
-# --- 2. BASE DE DATOS MAESTRA (FAENAS & GPS) ---
+# --- 2. BASE DE DATOS MAESTRA (70K NODOS & UBICACIONES) ---
 MINERIA_CHILE = {
-    "Antofagasta": {
-        "Chuquicamata (Codelco)": [-22.3, -68.9],
-        "Radomiro Tomic (Codelco)": [-22.2, -68.8],
-        "Escondida (BHP)": [-24.2, -69.0]
-    },
-    "O'Higgins": {
-        "El Teniente (Codelco)": [-34.1, -70.4]
-    },
-    "Atacama": {
-        "Salvador (Codelco)": [-26.2, -69.6]
-    }
+    "Norte": {"Chuquicamata": [-22.3, -68.9], "Radomiro Tomic": [-22.2, -68.8], "Escondida": [-24.2, -69.0]},
+    "Centro": {"El Teniente": [-34.1, -70.4], "Andina": [-33.1, -70.2], "Los Bronces": [-33.1, -70.3]},
+    "Sur": {"Salvador": [-26.2, -69.6]}
 }
 
-# --- 3. ESTILO CSS INDUSTRIAL (RESPONSIVO Y BLINDADO) ---
+# --- 3. ESTILOS Y BLINDAJE VISUAL ---
 st.markdown("""
     <style>
-    .stApp { background-color: #f0f2f6; }
-    /* Estilo de Tarjetas KPI */
-    .metric-card { background: white; padding: 15px; border-radius: 10px; border-left: 6px solid #f39c12; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    /* Barra de Riesgo */
-    .risk-container { width: 100%; background: #dfe6e9; border-radius: 20px; height: 30px; margin: 10px 0; }
-    .risk-fill { height: 100%; border-radius: 20px; text-align: center; color: white; font-weight: bold; line-height: 30px; transition: 1s; }
-    /* Estética de Enlaces */
-    .report-link { color: #2980b9; text-decoration: none; font-weight: bold; }
-    .report-link:hover { color: #e67e22; }
+    .stApp { background-color: #f4f7f6; }
+    .report-card { background: white; padding: 20px; border-radius: 10px; border-top: 5px solid #2980b9; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .status-alert { padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. PANEL LATERAL (INTERACTIVO) ---
+# --- 4. SIDEBAR: CONTROL DE PRIVILEGIOS ---
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/b/b1/Logo_Codelco.svg", width=100)
-    st.title("🛡️ AIH-MASTER")
+    st.image("https://upload.wikimedia.org/wikipedia/commons/b/b1/Logo_Codelco.svg", width=120)
+    st.title("🛡️ AIH-GATEWAY")
     
-    # Módulo de Fecha y Hora en tiempo real (Chile)
+    # RELOJ DE AUDITORÍA
     tz = pytz.timezone('America/Santiago')
-    now = datetime.now(tz)
-    st.write(f"🕒 **Fecha:** {now.strftime('%d/%m/%Y')}")
-    st.write(f"⏱️ **Hora:** {now.strftime('%H:%M:%S')}")
+    st.write(f"📅 {datetime.now(tz).strftime('%d/%m/%Y')} | 🕒 {datetime.now(tz).strftime('%H:%M:%S')}")
     
     st.divider()
-    region_sel = st.selectbox("📍 Sector:", list(MINERIA_CHILE.keys()))
-    faena_sel = st.selectbox("🏗️ Faena:", list(MINERIA_CHILE[region_sel].keys()))
-    coords = MINERIA_CHILE[region_sel][faena_sel]
+    # DEFINICIÓN DE ROL
+    rol = st.radio("NIVEL DE ACCESO:", ["👑 AIH-MASTER (SuperUser)", "🏗️ OPERACIÓN LOCAL"])
     
+    if rol == "🏗️ OPERACIÓN LOCAL":
+        sector = st.selectbox("Zona:", list(MINERIA_CHILE.keys()))
+        faena = st.selectbox("Faena:", list(MINERIA_CHILE[sector].keys()))
+    else:
+        faena = "CENTRAL GLOBAL"
+        st.warning("MODO AUDITORÍA TOTAL ACTIVO")
+
+# --- 5. LÓGICA DE AUDITORÍA Y TRAZABILIDAD ---
+def generar_log_auditoria():
+    data = []
+    for zona, faenas in MINERIA_CHILE.items():
+        for f in faenas:
+            data.append({
+                "Fecha/Hora": datetime.now(tz).strftime("%Y-%m-%d %H:%M"),
+                "Zona": zona,
+                "Faena": f,
+                "ICR": np.random.randint(10, 85),
+                "Estado": "Cumplido",
+                "Responsable": f"HSE_Admin_{f[:4]}"
+            })
+    return pd.DataFrame(data)
+
+log_global = generar_log_auditoria()
+
+# --- 6. ENTORNO MASTER CENTRAL (VISTA SUPER USUARIO) ---
+if rol == "👑 AIH-MASTER (SuperUser)":
+    st.title("🌐 PANEL CENTRAL DE AUDITORÍA & CONTABILIDAD")
+    st.markdown("### Trazabilidad Total de Operaciones Chile")
+    
+    # DASHBOARD GLOBAL DE RIESGO
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Unidades en Red", "7", "🟢")
+    c2.metric("Nodos Activos", "70,000", "Sincro OK")
+    c3.metric("Riesgo Promedio", f"{int(log_global['ICR'].mean())}%")
+    c4.metric("Auditorías Hoy", "24/24", "100%")
+
     st.divider()
-    st.info("📱 Interfaz Optimizada para Tablets y Smartphones")
-
-# --- 5. LÓGICA DE GOBERNANZA ---
-np.random.seed(sum(map(ord, faena_sel)))
-polvo = np.random.randint(30, 80)
-viento = np.random.randint(10, 60)
-riesgo = int((polvo * 0.5) + (viento * 0.5))
-
-# --- 6. PANTALLA PRINCIPAL ---
-st.title(f"PORTAL HSE: {faena_sel.upper()}")
-
-# BARRA DE RIESGO CERO INTERACTIVA
-color_risk = "#27ae60" if riesgo < 40 else "#f1c40f" if riesgo < 70 else "#c0392b"
-st.markdown(f"""
-    <div style="margin-bottom:5px;"><strong>Desviación Meta Riesgo Cero:</strong></div>
-    <div class="risk-container">
-        <div class="risk-fill" style="width: {riesgo}%; background-color: {color_risk};">{riesgo}%</div>
-    </div>
-""", unsafe_allow_html=True)
-
-# KPIs (ADAPTABLES A MÓVIL)
-k1, k2, k3, k4 = st.columns([1,1,1,1])
-with k1: st.metric("💨 Polvo", f"{polvo} mg/m³")
-with k2: st.metric("🌬️ Viento", f"{viento} km/h")
-with k3: st.metric("💓 Biometría", "98%")
-with k4: st.metric("📍 Nodos", "70,000")
-
-st.divider()
-
-# PESTAÑAS MAXIMIZADAS
-t1, t2, t3 = st.tabs(["📊 DASHBOARD", "🛰️ MAPA GPS", "📄 REPORTES & PKIS"])
-
-with t1:
-    c_rad, c_line = st.columns([1, 1])
-    with c_rad:
-        st.subheader("🎯 Radar de Riesgo")
-        fig_rad = go.Figure(go.Scatterpolar(r=[polvo, viento, 95, 30, riesgo], theta=['Polvo', 'Viento', 'Biometría', 'Gases', 'Riesgo'], fill='toself'))
-        st.plotly_chart(fig_rad, use_container_width=True)
-    with c_line:
-        st.subheader("📈 Tendencia 24h")
-        df_hist = pd.DataFrame({'T': range(10), 'R': np.random.randint(20, 90, 10)})
-        st.plotly_chart(px.line(df_hist, x='T', y='R'), use_container_width=True)
-
-with t2:
-    st.subheader(f"🗺️ Coordenadas Nodos: {coords}")
-    m = folium.Map(location=coords, zoom_start=14, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Satellite')
-    folium.Marker(coords, popup=faena_sel).add_to(m)
-    folium_static(m, width=700, height=400) # Tamaño optimizado para pantalla móvil
-
-with t3:
-    st.subheader("📂 Centro de Gestión Documental (HSE)")
     
-    # Hipervínculos a Reportes (Simulados como Módulos Interactivos)
-    col_a, col_b = st.columns(2)
+    # MÓDULO DE REPORTES GENERALES
+    st.subheader("📊 Consolidado General de PKIs y HSE")
+    
+    col_a, col_b = st.columns([2, 1])
+    
     with col_a:
-        st.markdown("### 🔗 Accesos Directos")
-        st.markdown("- [📁 Histórico de Incidentes - Chuqui](https://streamlit.io/gallery)")
-        st.markdown("- [📁 PKIs de Seguridad Trimestral](https://streamlit.io/gallery)")
-        st.markdown("- [📁 Manual de Riesgo Cero v2026](https://streamlit.io/gallery)")
+        st.write("Historial de Trazabilidad por Faena")
+        st.dataframe(log_global, use_container_width=True)
         
     with col_b:
-        st.markdown("### ⚙️ Acciones")
-        email_to = st.text_input("Enviar reporte a:", "gerencia@codelco.cl")
-        if st.button("📧 Enviar Reporte por Correo"):
-            st.success(f"Reporte enviado exitosamente a {email_to}")
-            
+        st.markdown("### 📦 Descarga Maestra")
+        st.download_button("📥 Descargar Todo (ZIP/Excel)", data=log_global.to_csv(), file_name="AUDITORIA_GLOBAL_AIH.csv")
+        st.info("Correo de Salida: **aeserviseu@gmail.com**")
+        email_dest = st.text_input("Enviar reporte consolidado a:", "director_hse@codelco.cl")
+        if st.button("📧 Despachar Auditoría Global"):
+            st.success(f"Protocolo de envío iniciado desde aeserviseu@gmail.com hacia {email_dest}")
+
+# --- 7. ENTORNO LOCAL (VISTA SEGREGADA) ---
+else:
+    st.title(f"🏢 PORTAL LOCAL: {faena.upper()}")
+    st.caption(f"Acceso restringido a datos de la unidad {faena}")
+    
+    # Datos Locales
+    datos_faena = log_global[log_global['Faena'] == faena]
+    riesgo_l = datos_faena['ICR'].values[0]
+    
+    # Barra de Riesgo (Mantenida)
+    st.progress(riesgo_l / 100)
+    st.write(f"Desviación Riesgo Cero: {riesgo_l}%")
+
+    # Descargas Locales (Solo sus índices)
     st.divider()
-    st.subheader("📦 Descargas Disponibles")
-    d1, d2, d3 = st.columns(3)
-    d1.download_button("PDF: Reporte HSE Diario", data="Datos de ejemplo", file_name="reporte_diario.pdf")
-    d2.download_button("CSV: Datos Nodos GPS", data="Datos de ejemplo", file_name="nodos.csv")
-    d3.download_button("PDF: Auditoría PKIs", data="Datos de ejemplo", file_name="auditoria.pdf")
+    st.subheader(f"📄 Mis Reportes HSE: {faena}")
+    st.download_button(f"📥 Descargar PKIs {faena}", data=datos_faena.to_csv(), file_name=f"HSE_{faena}.csv")
+    
+    # Mapa GPS Faena (Mantenido)
+    m = folium.Map(location=MINERIA_CHILE[sector][faena], zoom_start=13, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Sat')
+    folium_static(m, width=1100, height=400)
 
 st.divider()
-st.caption("AIH-MASTER GOLD | Uniting Technology Belgium | Sistema de Trazabilidad Total")
+st.caption("AIH-MASTER CORE v6.0 | Gobernanza Blindada | aeserviseu@gmail.com | Uniting Technology")
