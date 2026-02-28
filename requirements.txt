@@ -8,3 +8,11 @@ streamlit-extras
 requests
 reportlab
 pytz
+streamlit
+pandas
+numpy
+plotly
+folium
+streamlit-folium
+requests
+pytz
