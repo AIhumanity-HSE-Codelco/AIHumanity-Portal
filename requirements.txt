@@ -1,58 +1,10 @@
-# --- INTERFAZ & UX PRO ---
 streamlit
-streamlit-extras
-streamlit-folium
-streamlit-echarts
-streamlit-aggrid
-streamlit-navigation-bar
-
-# --- INTELIGENCIA ARTIFICIAL & DEEP LEARNING ---
-numpy
 pandas
-scipy
-scikit-learn
-tensorflow
-torch
-torchvision
-opencv-python-headless
-mediapipe
-
-# --- TELEDETECCIÓN & SATÉLITES (COPERNICUS/NASA) ---
-folium
-geopandas
-rasterio
-sentinelhub
-shapely
-fiona
-pyproj
-branca
-earthengine-api
-
-# --- SISMOLOGÍA & CIENCIAS DE LA TIERRA ---
-obspy
-requests
-urllib3
-pytz
-python-dateutil
-
-# --- INGENIERÍA ELÉCTRICA & ELECTRÓNICA ---
-pyvisa
-pyserial
-modbus-tk
-scipy
-
-# --- VISUALIZACIÓN AVANZADA ---
+numpy
 plotly
-matplotlib
-seaborn
-altair
-bokeh
-pydeck
-
-# --- AUDITORÍA, PDF & BIG DATA ---
+folium
+streamlit-folium
+streamlit-extras
+requests
 reportlab
-fpdf2
-pandas-profiling
-openpyxl
-sqlalchemy
-pyarrow
+pytz
