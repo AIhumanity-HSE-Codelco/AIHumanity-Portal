@@ -4,3 +4,7 @@ numpy
 plotly
 streamlit-echarts
 streamlit-extras
+folium
+streamlit-aggrid
+reportlab
+fpdf2
