@@ -7,118 +7,123 @@ from streamlit_folium import folium_static
 import folium
 from datetime import datetime
 
-# --- CONFIGURACIÓN DE SEGURIDAD Y BLINDAJE ---
-st.set_page_config(page_title="AIH-MASTER GLOBAL CORE", layout="wide")
+# --- CONFIGURACIÓN DE NÚCLEO ---
+st.set_page_config(page_title="AIH-GLOBAL COMMAND CENTER", layout="wide")
 
-# --- MOTOR DE DATOS JERÁRQUICO (Simulando Base de Datos Segregada) ---
-def get_faena_data(nombre_faena):
-    """
-    Simula la captura y gobernanza de múltiples señales de campo.
-    Construye el Indicador Compuesto de Riesgo Proactivo (ICRP).
-    """
-    np.random.seed(sum(map(ord, nombre_faena))) # Semilla única por faena
-    
-    # Señales de Campo (Raw Signals)
-    polvo = np.random.randint(20, 85)
-    viento = np.random.randint(5, 70)
-    biometria = np.random.uniform(90, 100) # Porcentaje de personal apto
-    sismos = np.random.uniform(0, 5)
-    
-    # Cálculo de Indicador Compuesto (Gobernanza)
-    # El riesgo aumenta exponencialmente si el viento y el polvo suben juntos
-    icrp = (polvo * 0.4) + (viento * 0.3) + ((100 - biometria) * 2) + (sismos * 10)
-    
-    return {
-        "polvo": polvo,
-        "viento": viento,
-        "biometria": round(biometria, 1),
-        "sismos": round(sismos, 1),
-        "icrp": round(min(icrp, 100), 1)
-    }
+# --- BASE DE DATOS ESTRUCTURADA ---
+LISTA_MINERAS = ["Chuquicamata", "El Teniente", "Escondida", "Collahuasi", "Los Bronces", "Andina", "Salvador"]
 
-# --- LÓGICA DE ACCESO (ENTORNOS ÚNICOS) ---
+# --- MOTOR DE RIESGO CON DETECCIÓN DE CRISIS ---
+def get_global_engine():
+    status_data = []
+    crisis_activa = False
+    minera_en_crisis = ""
+    
+    for m in LISTA_MINERAS:
+        # Simulación: Chuquicamata simulará un evento grave para este ejemplo
+        if m == "Chuquicamata":
+            riesgo = 88 # Forzamos Crisis
+        else:
+            riesgo = np.random.randint(10, 50)
+            
+        nivel = "CRÍTICO" if riesgo > 75 else "ALERTA" if riesgo > 45 else "ESTABLE"
+        if nivel == "CRÍTICO":
+            crisis_activa = True
+            minera_en_crisis = m
+            
+        status_data.append({
+            "Minera": m, 
+            "Riesgo": riesgo, 
+            "Nivel": nivel, 
+            "Color": "red" if nivel == "CRÍTICO" else "orange" if nivel == "ALERTA" else "green",
+            "Icono": "🚫" if nivel == "CRÍTICO" else "⚠️" if nivel == "ALERTA" else "✅"
+        })
+    return pd.DataFrame(status_data), crisis_activa, minera_en_crisis
+
+# --- INTERFAZ DE USUARIO ---
 with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/b/b1/Logo_Codelco.svg", width=120)
-    st.title("🛡️ AIH-GATEWAY")
-    
-    # Simulación de Login/Filtro por Faena
-    st.subheader("Autenticación de Entorno")
-    faena_activa = st.selectbox("Seleccione su Unidad Minera:", 
-        ["Chuquicamata", "El Teniente", "Escondida", "Collahuasi", "Los Bronces", "SQM Salar"])
-    
+    st.title("🛡️ AIH-MASTER CORE")
+    perfil = st.radio("MODO DE VISUALIZACIÓN:", ["MASTER GLOBAL", "FAENA LOCAL"])
     st.divider()
-    st.markdown(f"**Usuario:** HSE_Manager_{faena_activa.split()[0]}")
-    st.markdown(f"**Acceso:** Nivel de Seguridad 4")
+    if perfil == "FAENA LOCAL":
+        faena_sel = st.selectbox("Unidad:", LISTA_MINERAS)
+    else:
+        faena_sel = "GLOBAL"
 
-# --- CAPTURA DE SEÑALES EN TIEMPO REAL ---
-data = get_faena_data(faena_activa)
+# --- PROCESAMIENTO DE DATOS ---
+df_global, hay_crisis, unidad_crisis = get_global_engine()
 
-# --- PANEL DE CONTROL PRINCIPAL (ALARMAS) ---
-st.title(f"PORTAL OPERATIVO: {faena_activa.upper()}")
-st.caption(f"Gobernanza de Datos Proactiva | AIH-Master Core v4.0 | ID_FAENA: {hash(faena_activa)}")
+# --- PANTALLA MASTER GLOBAL ---
+if perfil == "MASTER GLOBAL":
+    st.title("🌐 PANEL DE CONTROL GENERAL - GOBERNANZA")
+    
+    # BANNER DE ALERTA CRUZADA (Si hay crisis en cualquier unidad)
+    if hay_crisis:
+        st.error(f"""
+            ### 🚨 PROTOCOLO DE CRISIS ACTIVO: EVENTO GRAVE DETECTADO
+            **Unidad Afectada:** {unidad_crisis} | **Riesgo:** {df_global[df_global['Minera']==unidad_crisis]['Riesgo'].values[0]}%
+            
+            **AVISO A TODA LA RED:** Se notificó a todas las unidades mineras. Activar Protocolo de Seguridad Estándar (DS594). 
+            Personal de soporte Uniting Technology en alerta.
+        """)
+    
+    # KPIs GENERALES POR SECTOR
+    st.subheader("📊 Monitoreo General por Sector")
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: st.metric("Nodos AIDeepMiner", "70,000", "SINCRO OK")
+    with c2: st.metric("Unidades Críticas", len(df_global[df_global['Nivel'] == "CRÍTICO"]), delta_color="inverse")
+    with c3: st.metric("Promedio Riesgo Red", f"{int(df_global['Riesgo'].mean())}%")
+    with c4: st.metric("Protocolos Activos", "SOP-09 / SOP-12")
 
-# Semáforo de Riesgo Compuesto
-if data['icrp'] >= 75:
-    color_alerta = "#FF0000" # ROJO
-    msg = "🛑 STOP WORK ORDERED: Riesgo Compuesto Crítico"
-    st.error(msg)
-elif data['icrp'] >= 45:
-    color_alerta = "#FFD700" # AMARILLO
-    msg = "⚠️ ALERTA PREVENTIVA: Monitoreo de Señales en Curso"
-    st.warning(msg)
-else:
-    color_alerta = "#00FF00" # VERDE
-    msg = "🟢 OPERACIÓN NORMAL: Parámetros bajo control"
-    st.success(msg)
+    st.divider()
 
-# --- VISUALIZACIÓN DE SEÑALES CORRELACIONADAS ---
-col1, col2, col3, col4 = st.columns(4)
-with col1: st.metric("💨 Polvo (PM10)", f"{data['polvo']} mg/m³")
-with col2: st.metric("🌬️ Viento (Señal)", f"{data['viento']} km/h")
-with col3: st.metric("💓 Bio-Status", f"{data['biometria']}%")
-with col4: st.metric("🛰️ Sismología", f"{data['sismos']} Mw")
+    # VISUALIZACIÓN DE EVENTOS POR SECTOR (MAPA + TABLA)
+    col_map, col_table = st.columns([2, 1])
+    
+    with col_map:
+        st.subheader("🗺️ Localización de Eventos")
+        m = folium.Map(location=[-27.0, -70.0], zoom_start=5, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Sat')
+        coords = {"Chuquicamata": [-22.3, -68.9], "El Teniente": [-34.1, -70.4], "Escondida": [-24.2, -69.0], "Collahuasi": [-20.9, -68.6], "Los Bronces": [-33.1, -70.3], "Andina": [-33.0, -70.2], "Salvador": [-26.2, -69.6]}
+        
+        for _, row in df_global.iterrows():
+            folium.Marker(
+                location=coords[row['Minera']],
+                popup=f"{row['Minera']}: {row['Nivel']}",
+                icon=folium.Icon(color=row['Color'], icon='warning')
+            ).add_to(m)
+        folium_static(m, width=800, height=450)
 
-st.divider()
+    with col_table:
+        st.subheader("📋 Resumen de Unidades")
+        st.dataframe(df_global[['Icono', 'Minera', 'Nivel', 'Riesgo']], use_container_width=True)
 
-# --- GRÁFICO DE RIESGO PROGRESIVO ---
-c_left, c_right = st.columns([2, 1])
-
-with c_left:
-    st.subheader("📈 Correlación de Riesgo Progresivo (ICRP)")
-    # 
-    # Generar tendencia basada en la señal de la faena
-    history = pd.DataFrame({
-        'Tiempo (min)': np.arange(0, 60, 5),
-        'Riesgo Compuesto': np.random.uniform(data['icrp']-10, data['icrp']+5, 12)
-    })
-    fig = px.area(history, x='Tiempo (min)', y='Riesgo Compuesto', 
-                  color_discrete_sequence=[color_alerta])
-    fig.update_layout(template="plotly_white", yaxis_range=[0, 100])
+    # GRÁFICO DE ANÁLISIS DE RIESGO
+    st.subheader("📈 Análisis de Carga de Riesgo por Minera")
+    fig = px.bar(df_global, x='Minera', y='Riesgo', color='Nivel', 
+                 color_discrete_map={'CRÍTICO': '#ff4b4b', 'ALERTA': '#f39c12', 'ESTABLE': '#2ecc71'})
     st.plotly_chart(fig, use_container_width=True)
 
-with c_right:
-    st.subheader("🎯 Matriz de Gobernanza")
-    # Gráfico de radar para ver qué señal está empujando el riesgo
-    categories = ['Polvo', 'Viento', 'Biometría', 'Sismos', 'Infraest.']
-    fig_radar = go.Figure()
-    fig_radar.add_trace(go.Scatterpolar(
-        r=[data['polvo'], data['viento'], 100-data['biometria'], data['sismos']*20, 30],
-        theta=categories, fill='toself', name='Perfil de Riesgo',
-        line_color=color_alerta
+# --- PANTALLA FAENA LOCAL ---
+else:
+    st.title(f"🏢 PORTAL HSE: {faena_sel.upper()}")
+    
+    # AVISO DE SEGURIDAD EXTERNA (Si otra minera está en crisis)
+    if hay_crisis and unidad_crisis != faena_sel:
+        st.warning(f"⚠️ NOTIFICACIÓN DE RED: Evento grave en curso en **{unidad_crisis}**. Mantener alerta en protocolos de comunicación.")
+    elif hay_crisis and unidad_crisis == faena_sel:
+        st.error(f"🛑 UNIDAD EN ESTADO CRÍTICO: Detención de operaciones sugerida. Reportar a Master Control.")
+
+    st.divider()
+    st.subheader("Análisis de Riesgo Local (Señales Correlacionadas)")
+    # Gráfico de Radar para ver factores
+    riesgo_local = df_global[df_global['Minera'] == faena_sel]['Riesgo'].values[0]
+    fig_radar = go.Figure(go.Scatterpolar(
+        r=[riesgo_local, np.random.randint(10,90), 95, 20, 10],
+        theta=['Polvo', 'Viento', 'Biometría', 'Gases', 'Sismo'],
+        fill='toself', line_color='orange'
     ))
-    fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False)
     st.plotly_chart(fig_radar, use_container_width=True)
 
-# --- MAPA SATELITAL DE NODOS (AISLADO) ---
-st.subheader("📍 Despliegue de Nodos AIDeepMiner en Faena")
-m = folium.Map(location=[-22.3, -68.9], zoom_start=14, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Sat')
-# Solo mostrar nodos de esta faena
-for i in range(10):
-    folium.CircleMarker(
-        location=[-22.3 + np.random.normal(0, 0.005), -68.9 + np.random.normal(0, 0.005)],
-        radius=5, color=color_alerta, fill=True
-    ).add_to(m)
-folium_static(m, width=1100)
-
 st.divider()
-st.caption("PROPIEDAD INTELECTUAL AIHUMANITY | ACCESO RESTRINGIDO POR FAENA")
+st.caption("AIH-MASTER COMMAND CENTER | Sistema de Interconexión de Emergencia | Uniting Technology")
