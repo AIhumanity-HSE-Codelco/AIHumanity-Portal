@@ -6,127 +6,130 @@ import plotly.graph_objects as go
 from streamlit_folium import folium_static
 import folium
 from datetime import datetime
+import pytz
 
-# --- 1. CONFIGURACIÓN DE GRADO MILITAR ---
-st.set_page_config(page_title="AIH-MASTER MAXIMIZED CORE", layout="wide")
+# --- 1. CONFIGURACIÓN DE NÚCLEO (OPTIMIZADO PARA MÓVIL) ---
+st.set_page_config(page_title="AIH-MASTER GOLD", layout="wide")
 
-# --- 2. BASE DE DATOS MAESTRA (REGIONES, FAENAS Y GPS) ---
+# --- 2. BASE DE DATOS MAESTRA (FAENAS & GPS) ---
 MINERIA_CHILE = {
     "Antofagasta": {
         "Chuquicamata (Codelco)": [-22.3, -68.9],
         "Radomiro Tomic (Codelco)": [-22.2, -68.8],
-        "Escondida (BHP)": [-24.2, -69.0],
-        "Gabriela Mistral (Codelco)": [-24.3, -69.1]
+        "Escondida (BHP)": [-24.2, -69.0]
     },
     "O'Higgins": {
-        "El Teniente (Codelco)": [-34.1, -70.4],
-        "Minera Florida": [-34.0, -71.0]
+        "El Teniente (Codelco)": [-34.1, -70.4]
     },
     "Atacama": {
-        "Salvador (Codelco)": [-26.2, -69.6],
-        "Caserones": [-27.3, -69.3]
-    },
-    "Valparaíso/RM": {
-        "Andina (Codelco)": [-33.1, -70.2],
-        "Los Bronces": [-33.1, -70.3]
+        "Salvador (Codelco)": [-26.2, -69.6]
     }
 }
 
-METAS_HSE = {"Polvo": 45, "Viento": 50, "Biometria": 95}
-
-# --- 3. ESTILO CSS (RECUPERANDO EL CONTRASTE) ---
+# --- 3. ESTILO CSS INDUSTRIAL (RESPONSIVO Y BLINDADO) ---
 st.markdown("""
     <style>
-    .stApp { background-color: #f4f7f6; }
-    .status-bar-container { width: 100%; background-color: #d1d8e0; border-radius: 15px; margin: 15px 0; }
-    .status-bar-fill { height: 30px; border-radius: 15px; text-align: center; color: white; font-weight: bold; line-height: 30px; }
-    [data-testid="stMetric"] { background-color: white; border-left: 8px solid #f39c12; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .stApp { background-color: #f0f2f6; }
+    /* Estilo de Tarjetas KPI */
+    .metric-card { background: white; padding: 15px; border-radius: 10px; border-left: 6px solid #f39c12; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    /* Barra de Riesgo */
+    .risk-container { width: 100%; background: #dfe6e9; border-radius: 20px; height: 30px; margin: 10px 0; }
+    .risk-fill { height: 100%; border-radius: 20px; text-align: center; color: white; font-weight: bold; line-height: 30px; transition: 1s; }
+    /* Estética de Enlaces */
+    .report-link { color: #2980b9; text-decoration: none; font-weight: bold; }
+    .report-link:hover { color: #e67e22; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. PANEL LATERAL (EL MENÚ QUE VOLVIÓ) ---
+# --- 4. PANEL LATERAL (INTERACTIVO) ---
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/b/b1/Logo_Codelco.svg", width=120)
-    st.title("🛡️ CONTROL MAESTRO")
+    st.image("https://upload.wikimedia.org/wikipedia/commons/b/b1/Logo_Codelco.svg", width=100)
+    st.title("🛡️ AIH-MASTER")
+    
+    # Módulo de Fecha y Hora en tiempo real (Chile)
+    tz = pytz.timezone('America/Santiago')
+    now = datetime.now(tz)
+    st.write(f"🕒 **Fecha:** {now.strftime('%d/%m/%Y')}")
+    st.write(f"⏱️ **Hora:** {now.strftime('%H:%M:%S')}")
+    
     st.divider()
-    region_sel = st.selectbox("📍 Región:", list(MINERIA_CHILE.keys()))
+    region_sel = st.selectbox("📍 Sector:", list(MINERIA_CHILE.keys()))
     faena_sel = st.selectbox("🏗️ Faena:", list(MINERIA_CHILE[region_sel].keys()))
     coords = MINERIA_CHILE[region_sel][faena_sel]
     
     st.divider()
-    st.success(f"GPS FAENA: {coords}")
-    st.info(f"Nodos AIDeepMiner: 70,000 en Red")
+    st.info("📱 Interfaz Optimizada para Tablets y Smartphones")
 
-# --- 5. LÓGICA DE CÁLCULO DE RIESGO ---
+# --- 5. LÓGICA DE GOBERNANZA ---
 np.random.seed(sum(map(ord, faena_sel)))
-polvo_r = np.random.randint(20, 80)
-viento_r = np.random.randint(10, 70)
-bio_r = np.random.randint(85, 100)
-riesgo_calc = int((polvo_r * 0.4) + (viento_r * 0.4) + ((100-bio_r)*2))
-riesgo_calc = min(riesgo_calc, 100)
+polvo = np.random.randint(30, 80)
+viento = np.random.randint(10, 60)
+riesgo = int((polvo * 0.5) + (viento * 0.5))
 
-# --- 6. INTERFAZ PRINCIPAL MAXIMIZADA ---
-st.title(f"PORTAL DE GOBERNANZA: {faena_sel.upper()}")
-st.write(f"**Integrador Jefe:** AIH-Master | **Estatus de Red:** 🟢 Sincronizado | {datetime.now().strftime('%H:%M:%S')}")
+# --- 6. PANTALLA PRINCIPAL ---
+st.title(f"PORTAL HSE: {faena_sel.upper()}")
 
-# BARRA DE PORCENTAJE INTERACTIVA (RIESGO CERO)
-color_bar = "#2ecc71" if riesgo_calc < 40 else "#f1c40f" if riesgo_calc < 75 else "#e74c3c"
+# BARRA DE RIESGO CERO INTERACTIVA
+color_risk = "#27ae60" if riesgo < 40 else "#f1c40f" if riesgo < 70 else "#c0392b"
 st.markdown(f"""
-    <div style="margin-top: 20px;"><strong>Desviación de Riesgo Cero: {riesgo_calc}%</strong></div>
-    <div class="status-bar-container">
-        <div class="status-bar-fill" style="width: {riesgo_calc}%; background-color: {color_bar};">
-            {riesgo_calc}%
-        </div>
+    <div style="margin-bottom:5px;"><strong>Desviación Meta Riesgo Cero:</strong></div>
+    <div class="risk-container">
+        <div class="risk-fill" style="width: {riesgo}%; background-color: {color_risk};">{riesgo}%</div>
     </div>
 """, unsafe_allow_html=True)
 
-# KPIs RECUPERADOS
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("💨 Polvo (PM10)", f"{polvo_r} mg/m³", f"{polvo_r - METAS_HSE['Polvo']} delta", delta_color="inverse")
-c2.metric("🌬️ Viento", f"{viento_r} km/h", f"{viento_r - METAS_HSE['Viento']} delta", delta_color="inverse")
-c3.metric("💓 Biometría", f"{bio_r}%", f"{bio_r - METAS_HSE['Biometria']}% meta")
-c4.metric("📊 Nodos GPS", "70,000", "ONLINE")
+# KPIs (ADAPTABLES A MÓVIL)
+k1, k2, k3, k4 = st.columns([1,1,1,1])
+with k1: st.metric("💨 Polvo", f"{polvo} mg/m³")
+with k2: st.metric("🌬️ Viento", f"{viento} km/h")
+with k3: st.metric("💓 Biometría", "98%")
+with k4: st.metric("📍 Nodos", "70,000")
 
 st.divider()
 
-# DASHBOARD DE ANÁLISIS
-tab_data, tab_map = st.tabs(["📊 ANÁLISIS DE RIESGO Y METAS", "🛰️ TELEDETECCIÓN GPS"])
+# PESTAÑAS MAXIMIZADAS
+t1, t2, t3 = st.tabs(["📊 DASHBOARD", "🛰️ MAPA GPS", "📄 REPORTES & PKIS"])
 
-with tab_data:
-    col_rad, col_top = st.columns([1, 1])
-    with col_rad:
-        st.subheader("🎯 Radar de Correlación")
-        
-        fig_radar = go.Figure(go.Scatterpolar(
-            r=[polvo_r, viento_r, bio_r, 40, riesgo_calc],
-            theta=['Polvo', 'Viento', 'Biometría', 'Gases', 'Riesgo'],
-            fill='toself', line_color='#e67e22'
-        ))
-        st.plotly_chart(fig_radar, use_container_width=True)
-    
-    with col_top:
-        st.subheader("🏆 Contribución al Riesgo Global")
-        # Gráfico comparativo de aporte
-        mineras_data = pd.DataFrame({
-            'Minera': ["Chuquicamata", "El Teniente", "Escondida", "Salvador"],
-            'Riesgo': [85, 42, 65, 30]
-        }).sort_values('Riesgo', ascending=False)
-        fig_bar = px.bar(mineras_data, x='Minera', y='Riesgo', color='Riesgo', color_continuous_scale='RdYlGn_r')
-        st.plotly_chart(fig_bar, use_container_width=True)
+with t1:
+    c_rad, c_line = st.columns([1, 1])
+    with c_rad:
+        st.subheader("🎯 Radar de Riesgo")
+        fig_rad = go.Figure(go.Scatterpolar(r=[polvo, viento, 95, 30, riesgo], theta=['Polvo', 'Viento', 'Biometría', 'Gases', 'Riesgo'], fill='toself'))
+        st.plotly_chart(fig_rad, use_container_width=True)
+    with c_line:
+        st.subheader("📈 Tendencia 24h")
+        df_hist = pd.DataFrame({'T': range(10), 'R': np.random.randint(20, 90, 10)})
+        st.plotly_chart(px.line(df_hist, x='T', y='R'), use_container_width=True)
 
-with tab_map:
-    st.subheader(f"🗺️ Despliegue de Nodos GPS en {faena_sel}")
-    
+with t2:
+    st.subheader(f"🗺️ Coordenadas Nodos: {coords}")
     m = folium.Map(location=coords, zoom_start=14, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Satellite')
+    folium.Marker(coords, popup=faena_sel).add_to(m)
+    folium_static(m, width=700, height=400) # Tamaño optimizado para pantalla móvil
+
+with t3:
+    st.subheader("📂 Centro de Gestión Documental (HSE)")
     
-    # Simular puntos GPS de nodos
-    for i in range(15):
-        folium.CircleMarker(
-            location=[coords[0] + np.random.normal(0, 0.005), coords[1] + np.random.normal(0, 0.005)],
-            radius=4, color='red' if riesgo_calc > 70 else 'blue', fill=True
-        ).add_to(m)
-    
-    folium_static(m, width=1100, height=450)
+    # Hipervínculos a Reportes (Simulados como Módulos Interactivos)
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.markdown("### 🔗 Accesos Directos")
+        st.markdown("- [📁 Histórico de Incidentes - Chuqui](https://streamlit.io/gallery)")
+        st.markdown("- [📁 PKIs de Seguridad Trimestral](https://streamlit.io/gallery)")
+        st.markdown("- [📁 Manual de Riesgo Cero v2026](https://streamlit.io/gallery)")
+        
+    with col_b:
+        st.markdown("### ⚙️ Acciones")
+        email_to = st.text_input("Enviar reporte a:", "gerencia@codelco.cl")
+        if st.button("📧 Enviar Reporte por Correo"):
+            st.success(f"Reporte enviado exitosamente a {email_to}")
+            
+    st.divider()
+    st.subheader("📦 Descargas Disponibles")
+    d1, d2, d3 = st.columns(3)
+    d1.download_button("PDF: Reporte HSE Diario", data="Datos de ejemplo", file_name="reporte_diario.pdf")
+    d2.download_button("CSV: Datos Nodos GPS", data="Datos de ejemplo", file_name="nodos.csv")
+    d3.download_button("PDF: Auditoría PKIs", data="Datos de ejemplo", file_name="auditoria.pdf")
 
 st.divider()
-st.caption("AIH-MASTER CORE | Sistema de Gobernanza Blindada | Uniting Technology Belgium")
+st.caption("AIH-MASTER GOLD | Uniting Technology Belgium | Sistema de Trazabilidad Total")
