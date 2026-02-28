@@ -16,3 +16,11 @@ folium
 streamlit-folium
 requests
 pytz
+streamlit
+pandas
+numpy
+plotly
+pyserial
+streamlit-folium
+folium
+pytz
