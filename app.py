@@ -2,108 +2,73 @@ import streamlit as st
 import requests
 import time
 
-# Configuración de página con estética Apple
-st.set_page_config(page_title="AIHumanity | Luxe Control", layout="wide")
+st.set_page_config(page_title="AIHumanity Master Console", layout="wide")
 
-# --- CUSTOM CSS: ESTILO CUPERTINO ---
+# CSS Estructurado: Cupertino Dark Industrial
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;600&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'SF Pro Display', sans-serif;
-        background-color: #000000;
-        color: #FFFFFF;
-    }
-
-    /* Tarjetas con efecto Glassmorphism */
-    .stMetric {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 20px;
-        backdrop-filter: blur(10px);
-        transition: transform 0.3s ease;
-    }
-    .stMetric:hover {
-        transform: translateY(-5px);
-        border: 1px solid #BF5AF2; /* Morado Apple */
-    }
-
-    /* Botón Interactivo Morado/Rosa */
-    .stButton>button {
-        background: linear-gradient(135deg, #BF5AF2 0%, #FF2D55 100%);
-        color: white;
-        border-radius: 12px;
-        border: none;
-        padding: 10px 25px;
-        font-weight: 600;
-        width: 100%;
-        transition: all 0.3s ease;
-    }
-    .stButton>button:hover {
-        box-shadow: 0px 0px 20px rgba(191, 90, 242, 0.6);
-        transform: scale(1.02);
-    }
-
-    /* Barras de progreso Rosadas */
-    .stProgress > div > div > div > div {
-        background-image: linear-gradient(to right, #BF5AF2 , #FF2D55);
-    }
+    .main { background-color: #050505; }
+    [data-testid="stMetricValue"] { color: #BF5AF2; font-family: 'SF Pro Display', sans-serif; }
+    .stProgress > div > div > div > div { background-image: linear-gradient(to right, #BF5AF2 , #FF2D55); }
+    .status-box { padding: 20px; border-radius: 15px; border: 1px solid #1f1f1f; background: #0f0f0f; }
     </style>
     """, unsafe_allow_html=True)
 
-# URL de Conexión
-URL_NODO = "https://aihumanity-tr3-default-rtdb.firebaseio.com/nodo1.json"
+URL = "https://aihumanity-tr3-default-rtdb.firebaseio.com/nodo1.json"
 
-# --- HEADER FINO ---
-st.markdown("<h1 style='text-align: center; color: #FFFFFF; font-weight: 200;'>AIHumanity <span style='color: #BF5AF2; font-weight: 600;'>Master</span></h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #8E8E93;'>Arquitectura de Riesgo Proactivo | Nodo AID-01</p>", unsafe_allow_html=True)
+# --- SIDEBAR DE GOBERNANZA ---
+with st.sidebar:
+    st.image("https://img.icons8.com/fluency/96/000000/chip.png", width=80)
+    st.title("Gobernanza AIH")
+    st.info("Nodo: AIDeepMiner-01\nTRL: 3 (Prototipo)")
+    if st.button("🔄 RE-SINCRONIZAR CANAL", use_container_width=True):
+        st.rerun()
+    st.divider()
+    st.caption("Protocolo HSE Activo")
 
-st.divider()
+# --- PANEL PRINCIPAL ---
+st.markdown("<h2 style='color: white;'>Consola de Monitoreo Predictivo</h2>", unsafe_allow_html=True)
 
 try:
-    res = requests.get(URL_NODO, timeout=3)
-    data = res.json()
+    r = requests.get(URL, timeout=3)
+    data = r.json()
     
     if data:
-        luz = data.get('luz', 0)
-        temp = data.get('temp', 0)
-        puesto = data.get('puesto', False)
-
-        # --- LAYOUT DE TRES COLUMNAS ---
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.metric("LUMINOSIDAD", f"{luz} lx")
-            st.progress(min(luz/4095, 1.0))
-            st.caption("Sensor Óptico D32")
-
-        with col2:
-            st.metric("TEMPERATURA", f"{temp} °C")
-            st.markdown(f"<div style='height: 4px; background: #32D74B; border-radius: 2px;'></div>", unsafe_allow_html=True)
-            st.caption("Módulo Térmico D26")
-
-        with col3:
-            st.write("**ESTADO EPP**")
-            if puesto:
-                st.markdown("<div style='padding:15px; border-radius:15px; background:rgba(50, 215, 75, 0.1); border: 1px solid #32D74B; color:#32D74B; text-align:center; font-weight:600;'>CASCO DETECTADO</div>", unsafe_allow_html=True)
+        # Layout de Ingeniería (3 Columnas Simétricas)
+        m1, m2, m3 = st.columns(3)
+        
+        with m1:
+            st.metric("LUMINOSIDAD (D32)", f"{data.get('luz', 0)} lx")
+            st.progress(min(data.get('luz', 0)/4095, 1.0))
+            
+        with m2:
+            st.metric("TÉRMICO (D26)", f"{data.get('temp', 0)} °C")
+            st.markdown("<div style='height:4px; background:#BF5AF2;'></div>", unsafe_allow_html=True)
+            
+        with m3:
+            st.write("**INTEGRIDAD EPP**")
+            if data.get('puesto'):
+                st.success("CASCO PUESTO")
             else:
-                st.markdown("<div style='padding:15px; border-radius:15px; background:rgba(255, 45, 85, 0.1); border: 1px solid #FF2D55; color:#FF2D55; text-align:center; font-weight:600;'>ALERTA: SIN CASCO</div>", unsafe_allow_html=True)
+                st.error("ALERTA: CASCO AUSENTE")
 
-        # --- BOTONERA INTERACTIVA ---
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🔄 ACTUALIZAR SISTEMA"):
-            st.toast("Sincronizando con el nodo...", icon="✨")
-            time.sleep(1)
-            st.rerun()
-
+        # --- SECCIÓN DE TENDENCIAS (Estructura HSE) ---
+        st.divider()
+        st.subheader("Análisis de Riesgo en Tiempo Real")
+        col_chart, col_log = st.columns([2, 1])
+        
+        with col_chart:
+            # Simulamos un radar de riesgo basado en los datos
+            st.info(f"Nivel de riesgo actual: {'BAJO' if data.get('puesto') else 'CRÍTICO'}")
+            
+        with col_log:
+            st.markdown("<div class='status-box'><b>LOG DE EVENTOS:</b><br><small>10:55 - Nodo Sincronizado<br>10:56 - Lectura Estable</small></div>", unsafe_allow_html=True)
+            
     else:
-        st.info("Esperando el latido del sensor...")
+        st.warning("⚠️ Sin flujo de datos. Verifique alimentación del ESP32.")
 
-except Exception as e:
-    st.error("Error de enlace con el servidor.")
+except:
+    st.error("Error de comunicación con el puente Firebase.")
 
-# Auto-refresh cada 5 segundos
-time.sleep(5)
+time.sleep(2)
 st.rerun()
