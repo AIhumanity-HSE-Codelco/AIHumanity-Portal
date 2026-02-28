@@ -1,121 +1,112 @@
 import streamlit as st
 import requests
-import pandas as pd
-import plotly.graph_objects as go
-import numpy as np
-from datetime import datetime
 import time
 
-# --- CONFIGURACIÓN DE ALTA GAMA ---
-st.set_page_config(page_title="AIHumanity OS", layout="wide", initial_sidebar_state="expanded")
+# Configuración Estructural
+st.set_page_config(page_title="AIH Master Console", layout="wide", initial_sidebar_state="collapsed")
 
-# --- ESTILO CUPERTINO DARK (GLASSMORPHISM V2) ---
+# --- PALETA DE COLORES CUPERTINO PREMIUM ---
+# Fondo: #000000 | Acento 1: #BF5AF2 (Morado) | Acento 2: #FF375F (Rosa)
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@200;400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@100;300;600&display=swap');
     
-    html, body, [class*="css"] { font-family: 'SF Pro Display', sans-serif; background-color: #000000; color: #f5f5f7; }
-    
-    /* Sidebar Estilo Apple */
-    [data-testid="stSidebar"] { background-color: rgba(10, 10, 10, 0.8); border-right: 1px solid rgba(255,255,255,0.1); }
-    
-    /* Tarjetas de Datos */
-    .stMetric { 
-        background: rgba(255, 255, 255, 0.03); 
-        border-radius: 24px; 
-        padding: 20px; 
+    html, body, [class*="css"] {
+        font-family: 'SF Pro Display', -apple-system, sans-serif;
+        background-color: #000000;
+        color: #FFFFFF;
+    }
+
+    /* Contenedores Glassmorphism */
+    div[data-testid="stMetric"] {
+        background: rgba(255, 255, 255, 0.02);
         border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 22px;
+        padding: 25px;
         backdrop-filter: blur(20px);
     }
-    
-    /* Botones Gradiente Morado/Rosa */
-    .stButton>button {
-        background: linear-gradient(135deg, #BF5AF2 0%, #FF2D55 100%);
-        color: white; border: none; border-radius: 12px;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    /* Texto de métricas en Blanco Puro */
+    [data-testid="stMetricValue"] {
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        font-size: 2.5rem !important;
     }
-    .stButton>button:hover { transform: scale(1.02); box-shadow: 0 8px 24px rgba(191, 90, 242, 0.4); }
+
+    /* Botones con gradiente refinado Morado-Rosa */
+    .stButton>button {
+        background: linear-gradient(135deg, #BF5AF2 0%, #FF375F 100%);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        padding: 12px 30px;
+        font-weight: 300;
+        letter-spacing: 1px;
+        transition: all 0.4s ease;
+    }
+    
+    .stButton>button:hover {
+        box-shadow: 0 0 25px rgba(191, 86, 242, 0.4);
+        transform: translateY(-2px);
+    }
+
+    /* Barras de progreso ultra-delgadas */
+    .stProgress > div > div > div > div {
+        background-image: linear-gradient(to right, #BF5AF2, #FF375F);
+        height: 4px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- LÓGICA DE NAVEGACIÓN (PÁGINAS SIMULADAS) ---
-with st.sidebar:
-    st.markdown("<h1 style='color: #BF5AF2; font-size: 24px;'>AIHumanity <span style='font-weight:200;'>OS</span></h1>", unsafe_allow_html=True)
-    st.caption("TRL3 Master Architecture")
-    menu = st.radio("SISTEMA OPERATIVO", ["❖ Dashboard Real-Time", "📈 Análisis de Tendencia", "⚠️ Protocolos HSE", "⚙ Configuración Nodo"])
-    st.divider()
-    st.info(f"Nodo: AIDeepMiner-01\nLatencia: 42ms\nBatería: 88%")
-
-# URL del ESP32
+# Lógica de Conexión
 URL = "https://aihumanity-tr3-default-rtdb.firebaseio.com/nodo1.json"
 
-# --- PÁGINA 1: DASHBOARD REAL-TIME ---
-if menu == "❖ Dashboard Real-Time":
-    st.markdown("<h1 style='font-weight:200;'>DataStream <span style='font-weight:600; color:#BF5AF2;'>Center 1.0</span></h1>", unsafe_allow_html=True)
+# --- HEADER MINIMALISTA ---
+st.markdown("<p style='text-align:center; color:#BF5AF2; letter-spacing:4px; font-weight:100; margin-bottom:0;'>AIHUMANITY</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; font-weight:100; margin-top:0;'>DataStream <span style='font-weight:600;'>Master</span></h1>", unsafe_allow_html=True)
+
+st.divider()
+
+try:
+    r = requests.get(URL, timeout=2)
+    data = r.json()
     
-    try:
-        r = requests.get(URL, timeout=2)
-        data = r.json()
+    if data:
+        # Layout Simétrico
+        c1, c2, c3 = st.columns(3)
         
-        if data:
-            # Indicadores Principales
-            c1, c2, c3, c4 = st.columns(4)
-            with c1:
-                st.metric("LUMINOSIDAD", f"{data.get('luz', 0)} lx", delta="Normal")
-            with c2:
-                st.metric("TEMPERATURA", f"{data.get('temp', 0)} °C", delta="Estable")
-            with c3:
-                puesto = data.get('puesto', False)
-                st.markdown(f"<div style='text-align:center;'><b>ESTATUS EPP</b><br><h2 style='color:{'#32D74B' if puesto else '#FF2D55'};'>{'PUESTO' if puesto else 'ALERTA'}</h2></div>", unsafe_allow_html=True)
-            with c4:
-                st.metric("GAS (SIM)", "0.02 ppm", delta="-0.01", delta_color="inverse")
-
-            # Visualización Potenciada con Plotly
-            st.divider()
-            col_chart, col_radar = st.columns([2, 1])
+        with c1:
+            st.metric("LUZ (D32)", f"{data.get('luz', 0)} lx")
+            st.progress(min(data.get('luz', 0)/4095, 1.0))
             
-            with col_chart:
-                st.subheader("Flujo de Datos Fotométricos")
-                # Simulamos serie de tiempo con el dato real
-                y = np.random.normal(data.get('luz', 0), 10, size=50)
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(y=y, mode='lines', line=dict(color='#BF5AF2', width=3), fill='tozeroy'))
-                fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=0,b=0), height=300, font=dict(color="white"))
-                st.plotly_chart(fig, use_container_width=True)
-
-            with col_radar:
-                st.subheader("Riesgo Proactivo")
-                st.markdown("""
-                <div style='background: rgba(191,90,242,0.1); padding:20px; border-radius:20px; border: 1px solid #BF5AF2;'>
-                <p style='color:#BF5AF2; margin:0;'>PREDICCIÓN DE SEGURIDAD</p>
-                <h2 style='margin:0;'>98.2%</h2>
-                <small>Operación Optimizada</small>
+        with c2:
+            st.metric("TEMP (D26)", f"{data.get('temp', 0)} °C")
+            st.markdown("<div style='height:4px; width:100%; background:rgba(255,255,255,0.1); border-radius:2px;'></div>", unsafe_allow_html=True)
+            
+        with c3:
+            puesto = data.get('puesto', False)
+            color_status = "#BF5AF2" if puesto else "#FF375F"
+            st.markdown(f"""
+                <div style='border: 1px solid {color_status}; border-radius:18px; padding:20px; text-align:center; background:rgba(255,255,255,0.01);'>
+                    <p style='color:{color_status}; margin:0; font-size:0.8rem;'>STATUS EPP</p>
+                    <h3 style='margin:0; color:{color_status};'>{'PROTECCIÓN OK' if puesto else 'ALERTA CRÍTICA'}</h3>
                 </div>
-                """, unsafe_allow_html=True)
-                if st.button("ACTUALIZAR NODO"):
-                    st.rerun()
+            """, unsafe_allow_html=True)
 
-    except:
-        st.error("Conexión perdida con el AIDeepMiner. Intentando reconexión...")
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        
+        # Botón Centralizado
+        _, col_btn, _ = st.columns([1,1,1])
+        with col_btn:
+            if st.button("SINCRONIZAR NODO"):
+                st.rerun()
 
-# --- PÁGINA 2: ANÁLISIS DE TENDENCIA ---
-elif menu == "📈 Análisis de Tendencia":
-    st.title("Inteligencia Predictiva")
-    st.write("Análisis histórico de nodos en rajo abierto y subterráneo.")
-    # Aquí puedes sumar Pandas para leer archivos CSV de la mina
-    df = pd.DataFrame(np.random.randn(20, 3), columns=['Polvo', 'Gas', 'Vibración'])
-    st.line_chart(df)
+    else:
+        st.markdown("<p style='text-align:center; color:#8E8E93;'>Esperando latido del hardware...</p>", unsafe_allow_html=True)
 
-# --- PÁGINA 3: PROTOCOLOS HSE ---
-elif menu == "⚠️ Protocolos HSE":
-    st.title("Gobernanza de Seguridad")
-    st.markdown("""
-    - **Protocolo Alfa:** Evacuación por gas (Inactivo)
-    - **Protocolo Beta:** Caída de operario (Detección por acelerómetro)
-    - **Estado del Nodo:** Luz Azul Fija (Sincronizado)
-    """)
-    st.image("https://img.icons8.com/fluency/144/security-shield.png", width=100)
+except:
+    st.error("Enlace interrumpido.")
 
-# Auto-refresh cada 3 segundos
-time.sleep(3)
+# Refresh discreto
+time.sleep(4)
 st.rerun()
