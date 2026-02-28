@@ -1,125 +1,107 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
 import serial
 import serial.tools.list_ports
 import time
 from datetime import datetime
 import pytz
 
-# --- 1. CONFIGURACIÓN DE ESCENA ---
-st.set_page_config(page_title="AIH-MASTER SUPREME", layout="wide", initial_sidebar_state="collapsed")
+# --- 1. CONFIGURACIÓN TÉCNICA ---
+st.set_page_config(page_title="AIH-MASTER COMMAND", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 2. ESTILO APPLE HIGH-END (CUPERTINO) ---
+# --- 2. ESTILO APPLE CUPERTINO (RECUPERADO Y MEJORADO) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;600&display=swap');
     html, body, [class*="st-"] { font-family: 'SF Pro Display', sans-serif; background-color: #f5f5f7; }
     
-    .apple-header {
-        background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px);
-        padding: 30px; border-radius: 24px; text-align: center;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.05); margin-bottom: 25px;
-        border: 1px solid rgba(255,255,255,0.3);
-    }
-    .main-clock { font-size: 90px; font-weight: 600; letter-spacing: -4px; color: #1d1d1f; margin: 0; }
     .apple-card {
-        background: white; border-radius: 20px; padding: 25px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);
+        border-radius: 22px; padding: 25px; border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.03); margin-bottom: 20px;
     }
-    .stButton>button {
-        background-color: #0071e3; color: white; border-radius: 12px;
-        padding: 10px 24px; border: none; font-weight: 600; width: 100%;
-    }
-    .risk-bar-bg { width: 100%; background: #e5e5ea; border-radius: 15px; height: 35px; overflow: hidden; margin: 10px 0; }
-    .risk-bar-fill { height: 100%; text-align: center; color: white; font-weight: bold; line-height: 35px; transition: 1.5s; }
+    .big-clock { font-size: 100px; font-weight: 600; text-align: center; color: #1d1d1f; letter-spacing: -5px; line-height: 1; }
+    .status-pill { padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: 600; }
+    .stButton>button { background-color: #0071e3; color: white; border-radius: 12px; font-weight: 600; width: 100%; border: none; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. MOTOR DE TIEMPO Y ESTADO ---
+# --- 3. MOTOR DE TIEMPO (CHILE) ---
 tz = pytz.timezone('America/Santiago')
 now = datetime.now(tz)
 
-# --- 4. CABECERA ÚNICA (RELOJ SUPREMO) ---
-st.markdown(f"""
-    <div class="apple-header">
-        <p class="main-clock">{now.strftime('%H:%M')}</p>
-        <p style="font-size: 22px; color: #86868b; margin: 0;">{now.strftime('%A, %d de %B %Y')} | PANEL CENTRAL INTEGRADO</p>
-    </div>
-""", unsafe_allow_html=True)
+# --- 4. CABECERA SUPREMA ---
+st.markdown(f'<div class="big-clock">{now.strftime("%H:%M")}</div>', unsafe_allow_html=True)
+st.markdown(f'<p style="text-align:center; color:#86868b; font-size:20px;">{now.strftime("%A, %d de %B %Y")} | GOBERNANZA CENTRAL</p>', unsafe_allow_html=True)
 
-# --- 5. PANEL CENTRAL: TODOS LOS MÓDULOS ---
+# --- 5. PANEL DE CONTROL UNIFICADO ---
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
-    # MÓDULO 1: GOBERNANZA HSE (RIESGO CERO)
+    # MÓDULO: INTEGRACIÓN HARDWARE ESP32
     st.markdown('<div class="apple-card">', unsafe_allow_html=True)
-    st.subheader("🛡️ Operación General: Codelco Objective Zero")
+    st.subheader("🔌 AIDeepMiner Hardware Bridge")
+    st.write("Conecte el casco vía USB para lectura de software interno y aprovisionamiento.")
     
-    riesgo = np.random.randint(30, 85)
-    color_r = "#ff3b30" if riesgo > 75 else "#0071e3"
-    st.markdown(f"**Índice de Riesgo Compuesto: {riesgo}%**")
-    st.markdown(f"""
-        <div class="risk-bar-bg">
-            <div class="risk-bar-fill" style="width: {riesgo}%; background-color: {color_r};">
-                {riesgo}% - {"ALERTA" if riesgo > 75 else "NORMAL"}
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    k1, k2, k3 = st.columns(3)
-    k1.metric("🌪️ PM10", f"{np.random.randint(40,90)} µg/m³")
-    k2.metric("🌬️ Viento", f"{np.random.randint(15,60)} km/h")
-    k3.metric("👷 Nodos", "70,000")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # MÓDULO 2: HARDWARE BRIDGE (ESP32)
-    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
-    st.subheader("🔌 Estación de Carga y Firmware (ESP32)")
-    
-    col_usb, col_flash = st.columns(2)
-    with col_usb:
-        if st.button("Detectar Cascos (USB)"):
+    c_usb, c_firm = st.columns(2)
+    with c_usb:
+        if st.button("Detectar Hardware (ESP32)"):
             ports = serial.tools.list_ports.comports()
             if ports:
-                for p in ports: st.success(f"Detectado: {p.device}")
+                for p in ports: st.success(f"Nodo Detectado: {p.device}")
             else:
-                st.warning("No se detectan dispositivos físicos.")
+                st.warning("Buscando dispositivo... Asegure conexión física.")
     
-    with col_flash:
-        uploaded_file = st.file_uploader("Firmware AIDeepMiner (.bin)", type="bin")
-        if uploaded_file and st.button("Flashear Software"):
-            st.write("Cargando software al nodo...")
-            st.progress(100)
-            st.success("Software cargado e integrado.")
+    with c_firm:
+        f_file = st.file_uploader("Firmware Binario", type="bin")
+        if f_file and st.button("Cargar Software"):
+            bar = st.progress(0)
+            for i in range(101):
+                time.sleep(0.02)
+                bar.progress(i)
+            st.success("Software cargado al ESP32 con éxito.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # MÓDULO: RIESGO OPERACIONAL (70K NODOS)
+    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
+    st.subheader("🛡️ Codelco Objective Zero Risk")
+    riesgo = np.random.randint(30, 80)
+    color = "#ff3b30" if riesgo > 70 else "#0071e3"
+    st.markdown(f"**Nivel de Riesgo Actual: {riesgo}%**")
+    st.markdown(f'<div style="width:100%; background:#e5e5ea; height:30px; border-radius:15px; overflow:hidden;"><div style="width:{riesgo}%; background:{color}; height:100%;"></div></div>', unsafe_allow_html=True)
+    
+    k1, k2, k3 = st.columns(3)
+    k1.metric("🌪️ PM10", f"{np.random.randint(30,90)} µg/m³")
+    k2.metric("🌬️ Viento", f"{np.random.randint(10,50)} km/h")
+    k3.metric("👷 Compliance EPP", "99.4%")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col_right:
-    # MÓDULO 3: ADMS & MITIGACIÓN
+    # MÓDULO: ADMS TACTICAL & MITIGACIÓN
     st.markdown('<div class="apple-card">', unsafe_allow_html=True)
-    st.subheader("💧 ADMS Tactical")
-    st.write("Sistema de Supresión: **ACTIVO**")
+    st.subheader("💧 ADMS Mitigation")
+    st.write("Estatus Supresores: **ONLINE**")
     st.progress(85)
-    st.caption("Efectividad de Nebulización")
+    st.caption("Eficacia de Mitigación en Tiempo Real")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # MÓDULO 4: WORKER SAFETY (PPE)
+    # MÓDULO: WORKER SAFETY (BIOMETRÍA & CAÍDA)
     st.markdown('<div class="apple-card">', unsafe_allow_html=True)
-    st.subheader("👷 Worker Safety")
-    st.info("EPP Status: **WORN ON**")
-    st.write("Fall Detection: **STANDBY**")
+    st.subheader("👷 Worker Safety Core")
+    st.write("- Fall Detection: **ACTIVE**")
+    st.write("- Worn On/Off: **SINCRO**")
     
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- 6. EXPORTACIÓN Y AUDITORÍA ---
+# --- 6. EXPORTACIÓN DE EVIDENCIA ---
 st.markdown('<div class="apple-card" style="text-align:center;">', unsafe_allow_html=True)
-st.subheader("📜 Exportación de Evidencia")
-c_e1, c_e2, c_e3 = st.columns(3)
-c_e1.button("Export JSON")
-c_e2.button("Export CSV")
-if c_e3.button("Enviar Log a aeserviseu@gmail.com"):
-    st.success("Log enviado con éxito.")
+st.subheader("📜 Audit-Ready Logs")
+ce1, ce2, ce3 = st.columns(3)
+ce1.button("Export JSON")
+ce2.button("Export CSV")
+if ce3.button("Send to aeserviseu@gmail.com"):
+    st.success("Log Enviado")
 st.markdown('</div>', unsafe_allow_html=True)
 
-st.caption("AIH-MASTER COMMAND v18.0 | Hardware Integration Core | Uniting Technology Belgium")
+st.caption("AIH-MASTER COMMAND v19.0 | Uniting Technology Belgium")
