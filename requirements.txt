@@ -4,5 +4,6 @@ numpy
 plotly
 folium
 streamlit-folium
-reportlab
 requests
+reportlab
+pytz
