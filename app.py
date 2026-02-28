@@ -1,46 +1,23 @@
 import streamlit as st
-from openai import OpenAI
-import requests
-import time
 import os
+from dotenv import load_dotenv
+from openai import OpenAI
 
-# 1. Configuración de Seguridad (Carga la llave de forma invisible)
-# En local busca en el sistema, en Streamlit Cloud busca en 'Secrets'
-api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+# --- PROTOCOLO DE LOCALIZACIÓN DE LLAVES ---
+# Definimos la ruta a tu carpeta en el escritorio
+desktop_path = os.path.join(os.path.expanduser("~"), "Desktop", "API'S", ".env")
 
-client = OpenAI(api_key=api_key)
+# Cargamos las llaves desde esa ruta específica
+if os.path.exists(desktop_path):
+    load_dotenv(desktop_path)
+    api_key = os.getenv("OPENAI_API_KEY")
+    st.success("🔒 Llaves de Seguridad Cargadas desde el Escritorio")
+else:
+    # Si falla la ruta local, intenta leer de los Secrets de Streamlit (Para la Nube)
+    api_key = st.secrets.get("OPENAI_API_KEY")
+    if not api_key:
+        st.error("🚨 ERROR: No se encontró el archivo .env en Desktop/API'S")
 
-# --- FUNCIÓN DE ANÁLISIS PREDICTIVO ---
-def analizar_riesgo_ia(luz, temp, puesto):
-    try:
-        prompt = f"""Analiza como Ingeniero HSE de Mina: 
-        Luminosidad: {luz}lx, Temperatura: {temp}C, Casco detectado: {puesto}.
-        Genera un dictamen técnico de 2 líneas sobre el riesgo operativo actual."""
-        
-        response = client.chat.completions.create(
-            model="gpt-4o", # O el modelo que prefiera
-            messages=[{"role": "system", "content": "Eres AIHumanity-Master."},
-                      {"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"Esperando conexión con el cerebro IA..."
-
-# --- INTERFAZ MORADA / NEGRO (CUPERTINO) ---
-st.markdown("<h1 style='color:#BF5AF2; font-weight:100;'>AIHumanity <span style='font-weight:600;'>Intelligence</span></h1>", unsafe_allow_html=True)
-
-# Supongamos que ya recibimos 'data' del ESP32 como en los pasos anteriores
-# Aquí insertamos el cuadro de análisis IA debajo de las métricas
-st.divider()
-st.subheader("🧠 Dictamen de IA Proactiva")
-
-if st.button("EJECUTAR ESCANEO DE 70K NODOS"):
-    with st.spinner("Procesando tendencias de riesgo..."):
-        # Usamos datos reales del ESP32 si están disponibles
-        resultado = analizar_riesgo_ia(1200, 24, True) # Valores de prueba
-        st.markdown(f"""
-            <div style='background:rgba(191,90,242,0.05); border:1px solid #BF5AF2; padding:20px; border-radius:15px;'>
-                <p style='color:#BF5AF2; font-size:0.8rem; margin:0;'>REPORTE DE INGENIERÍA:</p>
-                <p style='font-style:italic;'>"{resultado}"</p>
-            </div>
-        """, unsafe_allow_html=True)
+# Inicializamos el cliente si hay llave
+if api_key:
+    client = OpenAI(api_key=api_key)
