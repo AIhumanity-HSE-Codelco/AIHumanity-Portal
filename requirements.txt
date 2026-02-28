@@ -4,8 +4,5 @@ numpy
 plotly
 folium
 streamlit-folium
-streamlit-aggrid
 reportlab
 requests
-branca
-pytz
