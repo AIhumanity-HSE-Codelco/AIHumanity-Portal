@@ -1,16 +1,52 @@
+import streamlit as st
 import os
+from dotenv import load_dotenv
 
-# Intentamos localizar la carpeta exacta
-escritorio = os.path.join(os.path.expanduser("~"), "Desktop")
-carpeta_apis = os.path.join(escritorio, "API'S")
+# --- CONFIGURACIÓN DE INTERFAZ (DEBE IR PRIMERO) ---
+st.set_page_config(page_title="AIHumanity Master", layout="wide")
 
-print(f"--- AUDITORÍA DE RUTAS AIHUMANITY ---")
-print(f"1. Buscando en Escritorio: {escritorio}")
+st.markdown("""
+    <style>
+    reportview-container { background: #000000; }
+    .stApp { background-color: #000000; color: #FFFFFF; }
+    </style>
+    """, unsafe_allow_html=True)
 
-if os.path.exists(carpeta_apis):
-    print(f"✅ CARPETA DETECTADA: {carpeta_apis}")
-    archivos = os.listdir(carpeta_apis)
-    print(f"2. Archivos encontrados dentro: {archivos}")
-else:
-    print(f"❌ ERROR: No se encuentra la carpeta 'API'S' en el Escritorio.")
-    print("Sugerencia: Revisa si el nombre tiene tilde (APÍS) o si está en OneDrive.")
+st.title("🛡️ AIHumanity | Status Check")
+
+# --- PROTOCOLO DE RASTREO DE LLAVES ---
+# Probamos las 3 rutas posibles en Windows (Local, OneDrive y Raíz)
+rutas_posibles = [
+    os.path.join(os.path.expanduser("~"), "Desktop", "API'S", ".env"),
+    os.path.join(os.path.expanduser("~"), "OneDrive", "Desktop", "API'S", ".env"),
+    "C:/Users/easer/Desktop/API'S/.env"
+]
+
+llave_encontrada = False
+
+for ruta in rutas_posibles:
+    if os.path.exists(ruta):
+        load_dotenv(ruta)
+        st.success(f"✅ Bóveda detectada en: {ruta}")
+        llave_encontrada = True
+        break
+
+if not llave_encontrada:
+    st.warning("⚠️ Carpeta API'S no detectada en las rutas estándar.")
+    st.info("Buscando archivos en el directorio actual...")
+    st.code(f"Directorios en Escritorio: {os.listdir(os.path.join(os.path.expanduser('~'), 'Desktop'))}")
+
+# --- INTENTO DE CARGA DE OPENAI ---
+try:
+    from openai import OpenAI
+    api_key = os.getenv("OPENAI_API_KEY")
+    if api_key:
+        client = OpenAI(api_key=api_key)
+        st.write("🧠 **Cerebro IA:** Sincronizado y listo.")
+    else:
+        st.error("❌ La carpeta existe pero el archivo .env no tiene la variable OPENAI_API_KEY")
+except Exception as e:
+    st.error(f"❌ Error de Software: {e}")
+
+st.divider()
+st.button("RE-ESCANEAR SISTEMA")
