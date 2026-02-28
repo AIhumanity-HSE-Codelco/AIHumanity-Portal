@@ -5,143 +5,112 @@ import plotly.express as px
 import plotly.graph_objects as go
 from streamlit_folium import folium_static
 import folium
-from datetime import datetime
 
-# --- CONFIGURACIÓN DE ALTO NIVEL ---
-st.set_page_config(page_title="AIH-MASTER CONTROL FINAL", layout="wide")
+# --- 1. CONFIGURACIÓN DE ALTO NIVEL ---
+st.set_page_config(page_title="AIH-MASTER CONTROL GLOBAL", layout="wide")
 
-# --- BASE DE DATOS MAESTRA ---
-LISTA_MINERAS = ["Chuquicamata", "El Teniente", "Escondida", "Collahuasi", "Los Bronces", "Andina", "Salvador"]
+# --- 2. BASE DE DATOS MAESTRA DE MINERÍA CHILE ---
+MINERIA_CHILE = {
+    "Antofagasta": ["Chuquicamata (Codelco)", "Radomiro Tomic (Codelco)", "Escondida (BHP)", "Spence (BHP)", "Sierra Gorda", "Centinela", "Gabriela Mistral (Codelco)"],
+    "O'Higgins": ["El Teniente (Codelco)", "Minera Florida"],
+    "Atacama": ["Salvador (Codelco)", "Caserones", "Candelaria", "La Coipa"],
+    "Coquimbo": ["Los Pelambres", "Carmen de Andacollo"],
+    "Tarapacá": ["Cerro Colorado (BHP)", "Quebrada Blanca (Teck)", "Collahuasi"],
+    "Valparaíso/RM": ["Andina (Codelco)", "Los Bronces", "El Soldado"],
+    "No Metálica/Litio": ["SQM Salar de Atacama", "Nueva Victoria", "Surire (Quiborax)"]
+}
 
-# --- MOTOR DE DATOS BLINDADO POR FAENA ---
-def generar_datos_faena(nombre):
-    """Genera datos ÚNICOS y persistentes para cada faena específica."""
-    state = sum(map(ord, nombre)) # Llave única basada en el nombre
-    np.random.seed(state)
-    
-    # Señales de Campo Específicas
-    polvo = np.random.randint(25, 85)
-    viento = np.random.randint(10, 90)
-    biometria = np.random.randint(85, 100)
-    gases = np.random.uniform(0.1, 5.0)
-    sismo = np.random.uniform(0, 6)
-    
-    # Cálculo de Riesgo Compuesto (ICRP)
-    icrp = (polvo * 0.3) + (viento * 0.25) + (gases * 10) + (sismo * 5)
-    icrp = min(round(icrp, 1), 100.0)
-    
-    return {
-        "polvo": polvo, "viento": viento, "biometria": biometria,
-        "gases": round(gases, 2), "sismo": round(sismo, 1), "icrp": icrp
-    }
-
-# --- ESTILO INDUSTRIAL ---
+# --- 3. ESTILO CSS INDUSTRIAL (ALTA VISIBILIDAD) ---
 st.markdown("""
     <style>
-    .stApp { background-color: #f4f7f6; }
-    .kpi-box { background: white; padding: 15px; border-radius: 10px; border-left: 5px solid #f39c12; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
-    .alert-banner { padding: 20px; border-radius: 10px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+    .stApp { background-color: #f8f9fa; color: #1e272e; }
+    [data-testid="stMetric"] { 
+        background-color: #ffffff; 
+        padding: 20px; 
+        border-radius: 12px; 
+        border-left: 8px solid #f39c12; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    }
+    .stTabs [data-baseweb="tab-list"] { background-color: #ffffff; border-radius: 10px; padding: 5px; }
+    h1, h2, h3 { color: #2c3e50 !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- SIDEBAR: CONTROL DE ACCESO ---
+# --- 4. PANEL LATERAL (CONTROL DE MANDO) ---
 with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/b/b1/Logo_Codelco.svg", width=120)
-    st.title("🛡️ AIH-MASTER CORE")
-    perfil = st.radio("SISTEMA:", ["🌍 MASTER GLOBAL", "🏢 PORTAL POR FAENA"])
+    st.title("🛡️ CONTROL MAESTRO")
+    region = st.selectbox("📍 Seleccione Región:", list(MINERIA_CHILE.keys()))
+    faena = st.selectbox("🏗️ Seleccione Faena:", MINERIA_CHILE[region])
     st.divider()
-    if perfil == "🏢 PORTAL POR FAENA":
-        faena_sel = st.selectbox("Seleccione Unidad Minera:", LISTA_MINERAS)
-    else:
-        faena_sel = "GLOBAL"
+    st.success(f"Nodo Activo: {faena}")
+    st.info("AIH-Master Core v3.0\nTRL3 Operational")
 
-# --- LÓGICA DE VISUALIZACIÓN ---
+# --- 5. LÓGICA DE DATOS POR FAENA ---
+np.random.seed(sum(map(ord, faena)))
+riesgo_val = np.random.randint(15, 90)
+polvo = np.random.randint(30, 70)
+viento = np.random.randint(10, 65)
 
-if perfil == "🌍 MASTER GLOBAL":
-    st.title("🌐 PANEL DE CONTROL GENERAL (Gobernanza)")
-    
-    # Recolectar estados de todas para el resumen
-    resumen_global = []
-    for m in LISTA_MINERAS:
-        d = generar_datos_faena(m)
-        resumen_global.append({"Minera": m, "Riesgo": d['icrp'], "Estado": "🔴 CRÍTICO" if d['icrp'] > 70 else "🟢 ESTABLE"})
-    
-    df_g = pd.DataFrame(resumen_global)
-    
-    # Alerta de Crisis Global
-    crisis = df_g[df_g['Riesgo'] > 70]
-    if not crisis.empty:
-        st.error(f"🚨 ALERTA DE SISTEMA: {len(crisis)} unidad(es) en estado CRÍTICO. Protocolos de emergencia activos.")
+# --- 6. INTERFAZ PRINCIPAL ---
+st.title(f"HSE MASTER CONTROL: {faena.upper()}")
+st.markdown(f"**Gobernanza de 70,000 Nodos AIDeepMiner** | Sector: {region} | 🟢 Sincronizado")
+st.divider()
 
-    # KPIs de la Red
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Nodos AIDeepMiner", "70,000", "ONLINE")
-    c2.metric("Riesgo Promedio Red", f"{int(df_g['Riesgo'].mean())}%")
-    c3.metric("Unidades Críticas", len(crisis))
-
-    st.divider()
-    
-    # Mapa y Gráfico Comparativo
-    col_map, col_bar = st.columns([1, 1])
-    with col_map:
-        st.subheader("📍 Ubicación y Alertas")
-        m = folium.Map(location=[-27, -70], zoom_start=5, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Sat')
-        folium_static(m, width=550, height=400)
-    with col_bar:
-        st.subheader("📊 Comparativa de Riesgo por Faena")
-        fig = px.bar(df_g, x='Minera', y='Riesgo', color='Riesgo', color_continuous_scale='Reds')
-        st.plotly_chart(fig, use_container_width=True)
-
-else:
-    # --- PORTAL ESPECÍFICO POR FAENA (RECUPERADO) ---
-    data = generar_datos_faena(faena_sel)
-    
-    st.title(f"🏢 PORTAL HSE: {faena_sel.upper()}")
-    st.caption(f"Unidad Autónoma | ID: {hash(faena_sel)} | Sincronizado con Master Control")
-    
-    # Indicador de Parada (STOP WORK)
-    if data['icrp'] > 70:
-        st.markdown("<div style='background-color:#ff4b4b; color:white; padding:20px; border-radius:10px; text-align:center; font-size:24px;'>🛑 STOP WORK AUTHORITY ACTIVO</div>", unsafe_allow_html=True)
-        st.error(f"Riesgo de {data['icrp']}% excede los límites de seguridad en {faena_sel}.")
-    
-    st.divider()
-    
-    # KPIs Recuperados con Iconos
-    k1, k2, k3, k4 = st.columns(4)
-    k1.metric("💨 Polvo (PM10)", f"{data['polvo']} mg/m³")
-    k2.metric("🌬️ Viento", f"{data['viento']} km/h")
-    k3.metric("🧬 Biometría", f"{data['biometria']}%")
-    k4.metric("🌋 Sismo", f"{data['sismo']} Mw")
-
-    st.divider()
-
-    # Gráficos de Análisis Local
-    g1, g2 = st.columns([2, 1])
-    
-    with g1:
-        st.subheader("📈 Tendencia de Riesgo Progresivo")
-        # Simular 24 horas de datos para esta faena
-        np.random.seed(sum(map(ord, faena_sel)))
-        df_hist = pd.DataFrame({'Hora': range(24), 'Riesgo': np.random.uniform(data['icrp']-10, data['icrp']+5, 24)})
-        fig_line = px.area(df_hist, x='Hora', y='Riesgo', color_discrete_sequence=['#f39c12'])
-        fig_line.update_layout(template="plotly_white", yaxis_range=[0, 100])
-        st.plotly_chart(fig_line, use_container_width=True)
-    
-    with g2:
-        st.subheader("🎯 Factores de Riesgo")
-        fig_radar = go.Figure(go.Scatterpolar(
-            r=[data['polvo'], data['viento'], 100-data['biometria'], data['gases']*20, data['sismo']*15],
-            theta=['Polvo', 'Viento', 'Fatiga', 'Gases', 'Sismo'],
-            fill='toself', line_color='red' if data['icrp'] > 70 else 'orange'
-        ))
-        st.plotly_chart(fig_radar, use_container_width=True)
-
-    # Reportes HSE
-    st.divider()
-    st.subheader(f"📄 Centro de Reportes HSE - {faena_sel}")
-    col_rep1, col_rep2 = st.columns(2)
-    col_rep1.button(f"📥 Descargar Reporte Diario {faena_sel}")
-    col_rep2.button(f"📥 Exportar Datos AIDeepMiner (70k)")
+# KPIs CON ICONOS
+c1, c2, c3, c4 = st.columns(4)
+with c1: st.metric("💨 Polvo PM10", f"{polvo} mg/m³", "AIDeepMiner")
+with c2: st.metric("🌬️ Viento Real", f"{viento} km/h", "Sismología")
+with c3: st.metric("💓 Biometría", "98.5% OK", "IA Humana")
+with c4: st.metric("📉 Índice Riesgo", f"{riesgo_val}%", delta_color="inverse")
 
 st.divider()
-st.caption("AIH-MASTER CONTROL | Sistema de Gobernanza Blindada | Propiedad de Uniting Technology")
+
+# PESTAÑAS DE ANÁLISIS
+tab_risk, tab_map, tab_docs = st.tabs(["📊 DASHBOARD DE RIESGOS", "🛰️ TELEDETECCIÓN", "📂 GESTIÓN Y REPORTES"])
+
+with tab_risk:
+    col_a, col_b = st.columns([1, 2])
+    
+    with col_a:
+        st.subheader("🎯 Factores Críticos")
+        # Gráfico de Radar profesional
+        fig_radar = go.Figure(go.Scatterpolar(
+            r=[polvo, viento, 95, riesgo_val, 20],
+            theta=['Polvo', 'Viento', 'Biometría', 'Riesgo', 'Gases'],
+            fill='toself', line_color='#e67e22'
+        ))
+        fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False, height=400)
+        st.plotly_chart(fig_radar, use_container_width=True)
+        
+        if riesgo_val > 75:
+            st.error("🛑 ALERTA: STOP WORK AUTHORITY RECOMENDADO")
+
+    with col_b:
+        st.subheader("📈 Trazabilidad Predictiva (24h)")
+        df_tendencia = pd.DataFrame({'Hora': range(24), 'Riesgo': np.random.uniform(20, riesgo_val+5, 24)})
+        fig_line = px.area(df_tendencia, x='Hora', y='Riesgo', color_discrete_sequence=['#f39c12'])
+        fig_line.update_layout(template="plotly_white", height=400)
+        st.plotly_chart(fig_line, use_container_width=True)
+
+with tab_map:
+    st.subheader(f"🌍 Vista Satelital: {faena}")
+    # Mapa centrado (Chuqui por defecto si no hay coordenadas exactas)
+    m = folium.Map(location=[-22.3, -68.9], zoom_start=13, tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr='Google Satellite')
+    folium.Marker([-22.3, -68.9], popup=faena, icon=folium.Icon(color='red', icon='warning')).add_to(m)
+    folium_static(m, width=1100, height=500)
+
+with tab_docs:
+    st.subheader("📄 Centro de Documentación HSE")
+    st.write(f"Gestión de auditoría legal para la unidad: **{faena}**")
+    c_rep1, c_rep2 = st.columns(2)
+    c_rep1.button(f"📥 Exportar Reporte Diario (PDF)")
+    c_rep2.button(f"📊 Descargar Datos AIDeepMiner (CSV)")
+    st.table(pd.DataFrame({
+        "Modulo": ["Sensorica", "Clima", "Biometría"],
+        "Estado": ["Conectado", "Conectado", "Sincronizado"],
+        "Nodos": ["23,000", "12,000", "35,000"]
+    }))
+
+st.divider()
+st.caption("AIH-MASTER CONTROL | Uniting Technology Belgium | Sistema de Auditoría y Proactividad")
