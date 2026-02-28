@@ -8,4 +8,5 @@ folium
 streamlit-folium
 streamlit-aggrid
 reportlab
-fpdf2
+requests
+branca
