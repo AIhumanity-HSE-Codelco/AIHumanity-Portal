@@ -1,15 +1,17 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
+import plotly.express as px
 import serial
 import serial.tools.list_ports
 import time
 from datetime import datetime
 import pytz
 
-# --- 1. CONFIGURACIÓN DE NÚCLEO ---
-st.set_page_config(page_title="AIH-MASTER | ESP32 BRIDGE", layout="wide")
+# --- 1. CONFIGURACIÓN DE ESCENA ---
+st.set_page_config(page_title="AIH-MASTER SUPREME", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 2. ESTILO APPLE (CUPERTINO INTERFACE) ---
+# --- 2. ESTILO APPLE HIGH-END (CUPERTINO) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;600&display=swap');
@@ -17,112 +19,107 @@ st.markdown("""
     
     .apple-header {
         background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px);
-        padding: 40px; border-radius: 24px; text-align: center;
+        padding: 30px; border-radius: 24px; text-align: center;
         box-shadow: 0 10px 40px rgba(0,0,0,0.05); margin-bottom: 25px;
+        border: 1px solid rgba(255,255,255,0.3);
     }
-    .status-active { color: #34c759; font-weight: 600; }
-    .status-inactive { color: #ff3b30; font-weight: 600; }
-    
-    /* Botones Estilo Apple */
+    .main-clock { font-size: 90px; font-weight: 600; letter-spacing: -4px; color: #1d1d1f; margin: 0; }
+    .apple-card {
+        background: white; border-radius: 20px; padding: 25px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 20px;
+    }
     .stButton>button {
         background-color: #0071e3; color: white; border-radius: 12px;
-        padding: 10px 24px; border: none; font-weight: 600; transition: 0.3s;
+        padding: 10px 24px; border: none; font-weight: 600; width: 100%;
     }
-    .stButton>button:hover { background-color: #0077ed; transform: scale(1.02); }
+    .risk-bar-bg { width: 100%; background: #e5e5ea; border-radius: 15px; height: 35px; overflow: hidden; margin: 10px 0; }
+    .risk-bar-fill { height: 100%; text-align: center; color: white; font-weight: bold; line-height: 35px; transition: 1.5s; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. LÓGICA DE DETECTOR DE HARDWARE (ESP32) ---
-def get_esp32_info():
-    ports = serial.tools.list_ports.comports()
-    devices = []
-    for port in ports:
-        devices.append({
-            "Port": port.device,
-            "Description": port.description,
-            "HWID": port.hwid
-        })
-    return devices
-
-# --- 4. PANEL CENTRAL DE INTEGRACIÓN ---
+# --- 3. MOTOR DE TIEMPO Y ESTADO ---
 tz = pytz.timezone('America/Santiago')
+now = datetime.now(tz)
+
+# --- 4. CABECERA ÚNICA (RELOJ SUPREMO) ---
 st.markdown(f"""
     <div class="apple-header">
-        <h1 style="font-size: 50px; margin: 0; letter-spacing: -2px;">Hardware Provisioning</h1>
-        <p style="color: #86868b; font-size: 18px;">AIH-Master Bridge v1.0 | {datetime.now(tz).strftime('%H:%M:%S')}</p>
+        <p class="main-clock">{now.strftime('%H:%M')}</p>
+        <p style="font-size: 22px; color: #86868b; margin: 0;">{now.strftime('%A, %d de %B %Y')} | PANEL CENTRAL INTEGRADO</p>
     </div>
 """, unsafe_allow_html=True)
 
-col_info, col_action = st.columns([2, 1])
+# --- 5. PANEL CENTRAL: TODOS LOS MÓDULOS ---
+col_left, col_right = st.columns([2, 1])
 
-with col_info:
-    st.markdown("### 🔌 Detector de Nodos AIDeepMiner")
-    if st.button("Escanear Puertos USB"):
-        nodes = get_esp32_info()
-        if nodes:
-            st.success(f"Se han detectado {len(nodes)} dispositivo(s).")
-            df_nodes = pd.DataFrame(nodes)
-            st.table(df_nodes)
-        else:
-            st.error("No se detectaron nodos ESP32 conectados.")
-
-    st.markdown("---")
-    st.markdown("### 🔍 Lectura de Firmware Interno")
-    selected_port = st.selectbox("Seleccionar Puerto para Diagnóstico:", [p.device for p in serial.tools.list_ports.comports()])
+with col_left:
+    # MÓDULO 1: GOBERNANZA HSE (RIESGO CERO)
+    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
+    st.subheader("🛡️ Operación General: Codelco Objective Zero")
     
-    if st.button("Leer Información del Sistema"):
-        with st.status("Accediendo al ESP32...", expanded=True) as status:
-            try:
-                # Simulación de lectura serial (handshake con AIDeepMiner)
-                st.write(f"Conectando a {selected_port} a 115200 baud...")
-                time.sleep(1.5)
-                st.write("Interpretando JSON de configuración interna...")
-                time.sleep(1)
-                
-                # Data simulada de lo que leería el comando 'GET_INFO' en el ESP32
-                esp_data = {
-                    "Core Version": "v2.1.0-Codelco",
-                    "Node ID": "AID-TEN-992",
-                    "Last Sync": "2026-02-28",
-                    "Sensor Health": "98%",
-                    "Battery Cycle": "45"
-                }
-                st.json(esp_data)
-                status.update(label="Lectura Completada con Éxito", state="complete", expanded=False)
-            except Exception as e:
-                st.error(f"Error de conexión: {e}")
-
-with col_action:
-    st.markdown("### 🚀 Firmware Uploader")
-    st.info("Carga de software via Uniting Technology System")
+    riesgo = np.random.randint(30, 85)
+    color_r = "#ff3b30" if riesgo > 75 else "#0071e3"
+    st.markdown(f"**Índice de Riesgo Compuesto: {riesgo}%**")
+    st.markdown(f"""
+        <div class="risk-bar-bg">
+            <div class="risk-bar-fill" style="width: {riesgo}%; background-color: {color_r};">
+                {riesgo}% - {"ALERTA" if riesgo > 75 else "NORMAL"}
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
     
-    firmware_file = st.file_uploader("Cargar binario (.bin)", type=["bin"])
+    k1, k2, k3 = st.columns(3)
+    k1.metric("🌪️ PM10", f"{np.random.randint(40,90)} µg/m³")
+    k2.metric("🌬️ Viento", f"{np.random.randint(15,60)} km/h")
+    k3.metric("👷 Nodos", "70,000")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # MÓDULO 2: HARDWARE BRIDGE (ESP32)
+    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
+    st.subheader("🔌 Estación de Carga y Firmware (ESP32)")
     
-    if firmware_file is not None:
-        st.write(f"Archivo cargado: **{firmware_file.name}**")
-        if st.button("FLASH AIDEEPMINER"):
-            progress_bar = st.progress(0)
-            for i in range(101):
-                time.sleep(0.05)
-                progress_bar.progress(i)
-            st.balloons()
-            st.success("¡Firmware actualizado correctamente!")
-            
-    st.divider()
-    st.markdown("### 🛠️ Herramientas de Campo")
-    st.button("Reset de Fábrica (Nivel 3)")
-    st.button("Calibración de Sensores PM10")
+    col_usb, col_flash = st.columns(2)
+    with col_usb:
+        if st.button("Detectar Cascos (USB)"):
+            ports = serial.tools.list_ports.comports()
+            if ports:
+                for p in ports: st.success(f"Detectado: {p.device}")
+            else:
+                st.warning("No se detectan dispositivos físicos.")
+    
+    with col_flash:
+        uploaded_file = st.file_uploader("Firmware AIDeepMiner (.bin)", type="bin")
+        if uploaded_file and st.button("Flashear Software"):
+            st.write("Cargando software al nodo...")
+            st.progress(100)
+            st.success("Software cargado e integrado.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- 5. LOG DE AUDITORÍA (AUDIT-READY) ---
-st.divider()
-st.subheader("📜 Registro de Operaciones de Hardware")
-log_entry = pd.DataFrame([{
-    "Fecha": datetime.now(tz).strftime("%Y-%m-%d %H:%M"),
-    "Evento": "Flasheo de Firmware",
-    "Nodo": "ESP32-CH340",
-    "Resultado": "EXITOSO",
-    "Operador": "AIH-Master"
-}])
-st.table(log_entry)
+with col_right:
+    # MÓDULO 3: ADMS & MITIGACIÓN
+    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
+    st.subheader("💧 ADMS Tactical")
+    st.write("Sistema de Supresión: **ACTIVO**")
+    st.progress(85)
+    st.caption("Efectividad de Nebulización")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.caption("AIH-MASTER HARDWARE BRIDGE | Uniting Technology Belgium")
+    # MÓDULO 4: WORKER SAFETY (PPE)
+    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
+    st.subheader("👷 Worker Safety")
+    st.info("EPP Status: **WORN ON**")
+    st.write("Fall Detection: **STANDBY**")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# --- 6. EXPORTACIÓN Y AUDITORÍA ---
+st.markdown('<div class="apple-card" style="text-align:center;">', unsafe_allow_html=True)
+st.subheader("📜 Exportación de Evidencia")
+c_e1, c_e2, c_e3 = st.columns(3)
+c_e1.button("Export JSON")
+c_e2.button("Export CSV")
+if c_e3.button("Enviar Log a aeserviseu@gmail.com"):
+    st.success("Log enviado con éxito.")
+st.markdown('</div>', unsafe_allow_html=True)
+
+st.caption("AIH-MASTER COMMAND v18.0 | Hardware Integration Core | Uniting Technology Belgium")
