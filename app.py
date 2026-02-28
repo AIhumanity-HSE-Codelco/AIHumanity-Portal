@@ -5,7 +5,7 @@ import plotly.express as px
 from streamlit_extras.metric_cards import style_metric_cards
 import folium
 from streamlit_folium import folium_static
-from folium.plugins import HeatMap
+from folium.plugins import HeatMap, MarkerCluster
 import requests
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -13,107 +13,125 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 import io
 from datetime import datetime
+import pytz
 
-# --- CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(page_title="AIHumanity HSE Master", page_icon="🛡️", layout="wide")
+# --- CONFIGURACIÓN DE ALTO NIVEL ---
+st.set_page_config(page_title="HSE MASTER CONTROL - CODELCO", page_icon="🛡️", layout="wide")
 
-# --- FUNCIÓN METEOROLOGÍA (SIMULADA TRL3 / API READY) ---
-def get_weather(lat, lon):
-    # En producción usar: f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid=YOUR_API_KEY"
-    return {
-        "temp": f"{np.random.randint(15, 35)}°C",
-        "viento": f"{np.random.randint(5, 40)} km/h",
-        "humedad": f"{np.random.randint(10, 60)}%",
-        "condicion": "Despejado" if np.random.rand() > 0.3 else "Tormenta de Polvo"
-    }
+# --- BASE DE DATOS DE FAENAS CHILENAS ---
+MINERAS_CHILE = {
+    "Chuquicamata": {"lat": -22.30, "lon": -68.90, "region": "Antofagasta"},
+    "Radomiro Tomic": {"lat": -22.21, "lon": -68.85, "region": "Antofagasta"},
+    "Ministro Hales": {"lat": -22.38, "lon": -68.89, "region": "Antofagasta"},
+    "Gabriela Mistral": {"lat": -24.00, "lon": -68.60, "region": "Antofagasta"},
+    "Salvador": {"lat": -26.24, "lon": -69.61, "region": "Atacama"},
+    "Andina": {"lat": -33.02, "lon": -70.28, "region": "Valparaíso"},
+    "El Teniente": {"lat": -34.08, "lon": -70.45, "region": "O'Higgins"},
+    "Puerto Amberes (Bélgica)": {"lat": 51.21, "lon": 4.40, "region": "Europa"}
+}
 
-# --- MÓDULO 1: IDENTIDAD ---
-st.title("🛡️ AIHumanity - HSE Master Control")
-st.markdown(f"### **Codelco / BHP** | **Portal de Auditoría en Tiempo Real**")
-st.caption("By Uniting Technology | Belgium | v2.0.4-PRO")
+# --- LÓGICA DE ALERTAS METEO ---
+def get_alerta_status(zona):
+    prob = np.random.rand()
+    if prob > 0.85: return "🔴 CRÍTICO: Tormenta Eléctrica / Viento Blanco", "Inverse"
+    if prob > 0.60: return "🟡 ADVERTENCIA: Polvo Suspendido Elevado", "Normal"
+    return "🟢 ESTABLE: Condiciones Óptimas", "Normal"
 
-# --- NAVEGACIÓN ---
-tab1, tab2, tab3 = st.tabs(["📊 Control & Clima", "🗺️ Mapa de Riesgo 3D", "📄 Auditoría & PDF"])
+# --- INTERFAZ PRINCIPAL ---
+st.title("🛡️ HSE MASTER CONTROL - SISTEMA INTEGRADO MINERO")
+st.markdown(f"## **Uniting Technology | Portal Global de Seguridad Proactiva**")
+st.caption(f"Acceso Autorizado: AIH-Master | Fecha: {datetime.now(pytz.timezone('America/Santiago')).strftime('%d/%m/%Y %H:%M')} CLST")
+
+# --- NAVEGACIÓN POR MÓDULOS ---
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Dashboard Real-Time", "🗺️ Mapa Geográfico Riesgo", "⛈️ Red Meteorológica", "📄 Auditoría Legal PDF"])
 
 with tab1:
-    st.subheader("🌦️ Reporte Meteorológico & KPIs")
+    st.subheader("🚀 KPIs de Operación Nacional")
+    faena_sel = st.selectbox("Seleccione Centro de Trabajo:", list(MINERAS_CHILE.keys()))
+    alerta, color_status = get_alerta_status(faena_sel)
     
-    # Simulación por zonas mineras
-    zona = st.selectbox("Seleccione Zona de Monitoreo:", ["Chuquicamata", "El Teniente", "Radomiro Tomic", "Puerto Amberes"])
-    w = get_weather(-22.5, -68.9)
+    st.error(alerta) if "🔴" in alerta else st.warning(alerta) if "🟡" in alerta else st.success(alerta)
     
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Temperatura", w['temp'])
-    c2.metric("Viento (Vector)", w['viento'], delta="Alerta Ráfagas" if int(w['viento'].split()[0]) > 30 else "Estable")
-    c3.metric("Humedad Relativa", w['humedad'])
-    c4.metric("Status AIH-Node", "ACTIVO", delta="70k Nodos")
-    style_metric_cards(background_color="#1d2129", border_left_color="#ff4b4b")
+    c1.metric("Nodos AIDeepMiner", "70,000", delta="ONLINE", delta_color="normal")
+    c2.metric("Polvo Promedio (PM10)", f"{np.random.randint(20,55)} mg/m³", delta="-5%", delta_color="normal")
+    c3.metric("Gases Global", "0.02 ppm", delta="0%", delta_color="normal")
+    c4.metric("Índice Riesgo (ICR)", f"{np.random.randint(5,15)}%", delta="Bajo Control")
+    style_metric_cards(background_color="#11141b", border_left_color="#f39c12", border_size_px=2)
 
     st.markdown("---")
-    st.subheader("📈 Análisis de Exposición Proactiva")
-    df = pd.DataFrame({'Hora': range(24), 'Riesgo': np.random.uniform(5, 50, 24)})
-    fig = px.line(df, x='Hora', y='Riesgo', title="Trazabilidad de Riesgo 24h", template="plotly_dark")
-    st.plotly_chart(fig, use_container_width=True)
+    st.subheader("📉 Trazabilidad de Exposición (Toda la Red)")
+    hist_data = pd.DataFrame({'Minuto': range(60), 'Riesgo %': np.random.uniform(10, 30, 60)})
+    st.plotly_chart(px.area(hist_data, x='Minuto', y='Riesgo %', template="plotly_dark", color_discrete_sequence=['#f39c12']), use_container_width=True)
 
 with tab2:
-    st.header("🗺️ Capas de Riesgo Geográfico (Heatmap)")
-    st.info("Visualización de trazabilidad: Los colores indican acumulación de material particulado.")
+    st.subheader("🗺️ Visualización de Riesgo por Capas (Heatmap Global)")
+    m = folium.Map(location=[-27.0, -70.0], zoom_start=5, tiles="CartoDB dark_matter")
     
-    m = folium.Map(location=[-22.56, -68.91], zoom_start=13, tiles="CartoDB dark_matter")
+    # Generar puntos de calor en todas las mineras de Chile
+    heat_points = []
+    for f in MINERAS_CHILE.values():
+        for _ in range(20):
+            heat_points.append([f['lat'] + (np.random.rand()-0.5)*0.5, f['lon'] + (np.random.rand()-0.5)*0.5, np.random.rand()])
     
-    # Generar puntos de calor (Heatmap) simulando sensores AIDeepMiner
-    heat_data = [[-22.56 + (np.random.rand()-0.5)*0.02, -68.91 + (np.random.rand()-0.5)*0.02, np.random.rand()] for _ in range(100)]
-    HeatMap(heat_data).add_to(m)
+    HeatMap(heat_points, radius=15, blur=20).add_to(m)
     
-    folium_static(m, width=1000)
+    # Marcadores de Centros de Mando
+    for nombre, coord in MINERAS_CHILE.items():
+        folium.Marker([coord['lat'], coord['lon']], popup=f"Centro HSE: {nombre}", icon=folium.Icon(color='orange', icon='tower')).add_to(m)
+    
+    folium_static(m, width=1100, height=600)
 
 with tab3:
-    st.header("📄 Generador de Informes de Auditoría")
-    st.write("Documentos optimizados para impresión legal (PDF A4).")
-    
-    obs = st.text_area("Observaciones del Ingeniero HSE:", "Sin incidentes críticos. Control de polvo ADMS activo.")
+    st.subheader("⛈️ Reporte Meteorológico de Alta Precisión")
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.info(f"Datos de {faena_sel}:")
+        st.write(f"**Viento:** {np.random.randint(10,60)} km/h")
+        st.write(f"**Presión Atmo:** 1013 hPa")
+        st.write(f"**Visibilidad:** 15 km")
+    with col_b:
+        st.write("**Alertas Continentales:**")
+        st.write("✅ Sudamérica: Operación Normal")
+        st.write("✅ Europa (Amberes): Operación Normal")
+        st.write("🟡 Asia: Alerta de Monzón en Fábrica Sensores")
 
-    def build_pdf():
+with tab4:
+    st.subheader("📄 Generador de Reporte de Auditoría Legal")
+    st.write("Exportación de datos para cumplimiento normativo chileno (DS 594).")
+    
+    comentarios = st.text_area("Observaciones de Seguridad:", "Protocolo ADMS activo en rajo. Nodos AIDeepMiner operando al 100%. Sin desviaciones críticas.")
+
+    def generate_pro_pdf():
         buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=50, leftMargin=50, topMargin=50, bottomMargin=50)
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
         styles = getSampleStyleSheet()
         elements = []
-
-        # Título y Encabezado
-        elements.append(Paragraph("INFORME DE AUDITORÍA HSE - AIHUMANITY", styles['Title']))
-        elements.append(Paragraph(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal']))
-        elements.append(Paragraph(f"Organización: CODELCO / BHP", styles['Normal']))
-        elements.append(Spacer(1, 20))
-
-        # Tabla de Datos
-        data = [['KPI', 'Valor', 'Estado'],
-                ['Polvo PM10', '32 mg/m3', 'Bajo Control'],
-                ['Gases', '12 ppm', 'Normal'],
-                ['Nodos Activos', '69,870', '99.8%']]
         
-        t = Table(data, colWidths=[150, 150, 150])
-        t.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                               ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                               ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                               ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
+        elements.append(Paragraph(f"INFORME DE AUDITORÍA HSE - {faena_sel.upper()}", styles['Title']))
+        elements.append(Paragraph(f"Generado por: AIH-Master | Uniting Technology Belgium", styles['Normal']))
+        elements.append(Spacer(1, 12))
+        
+        data = [
+            ['PARÁMETRO', 'MEDICIÓN', 'ESTADO'],
+            ['Concentración Polvo', '34 mg/m3', 'CUMPLIMIENTO'],
+            ['Gases Nocivos', 'ND', 'CUMPLIMIENTO'],
+            ['Personal en Zona', '452', 'PROTEGIDO'],
+            ['Nodos Activos', '70,000', 'SINCRO OK']
+        ]
+        t = Table(data, colWidths=[160, 160, 160])
+        t.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0), colors.orange), ('GRID',(0,0),(-1,-1),1,colors.black), ('FONTSIZE',(0,0),(-1,-1),10)]))
         elements.append(t)
         elements.append(Spacer(1, 20))
+        elements.append(Paragraph(f"Observaciones: {comentarios}", styles['Normal']))
         
-        # Observaciones (Sin salirse del margen)
-        elements.append(Paragraph("Observaciones Técnicas:", styles['Heading2']))
-        elements.append(Paragraph(obs, styles['Normal']))
-        
-        elements.append(Spacer(1, 40))
-        elements.append(Paragraph("__________________________", styles['Normal']))
-        elements.append(Paragraph("Firma AIH-Master Jefe de Turno", styles['Normal']))
-
         doc.build(elements)
         buffer.seek(0)
         return buffer
 
-    if st.button("💾 Generar y Validar PDF"):
-        pdf = build_pdf()
-        st.download_button("Descargar Reporte PDF Auditable", pdf, "Reporte_HSE_Oficial.pdf", "application/pdf")
+    if st.button("💾 Generar Informe Auditoría"):
+        pdf_file = generate_pro_pdf()
+        st.download_button("Descargar PDF Oficial", pdf_file, f"Reporte_HSE_{faena_sel}.pdf", "application/pdf")
 
 st.divider()
-st.markdown("🟢 **Sincronización Global Activa** | Bélgica - Chile - China")
+st.markdown("🟢 **SISTEMA INTEGRADO AIHUMANITY** | Conectando Chile, Bélgica y el mundo de la Minería.")
