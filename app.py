@@ -88,4 +88,12 @@ def main():
         st.markdown("🛡️ **Protocolo de Blindaje Nivel 5**")
 
     if "01" in seleccion:
-        render_cerebro_40
+        render_cerebro_40()
+    elif "40" in seleccion:
+        st.title("40 🔮 Predictor de Escenarios 4D")
+        
+    else:
+        render_generic(seleccion)
+
+if __name__ == "__main__":
+    main()
