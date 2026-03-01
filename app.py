@@ -1,136 +1,168 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
+from streamlit_echarts import st_echarts
 from datetime import datetime
 import time
 
-# 1. SETUP DE ALTA DENSIDAD
-st.set_page_config(page_title="AIH | Control Tower Teniente", layout="wide", initial_sidebar_state="collapsed")
+# 1. SETUP DE DIMENSIONES (WIDE MODE FORZADO)
+st.set_page_config(page_title="AIH | Command Center", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS DE ALTA DENSIDAD (TEXTO MÁS PEQUEÑO Y TARJETAS COMPACTAS)
+# 2. CSS DE PRECISIÓN QUIRÚRGICA (CUPERTINO INDUSTRIAL)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color: #F4F7F9; font-size: 0.95rem; }
-    .stApp { background-color: #F4F7F9; }
     
-    /* Tarjetas Compactas */
-    .mini-card {
+    /* Configuración de Escala */
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color: #F2F4F7; font-size: 0.85rem; }
+    
+    /* Tarjetas de Alta Densidad */
+    .module-box {
         background: white;
-        padding: 12px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        border: 1px solid #E1E4E8;
-        margin-bottom: 10px;
+        padding: 10px 15px;
+        border-radius: 16px;
+        border: 1px solid #E5E9F0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        margin-bottom: 8px;
+        height: 100%;
     }
-    .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-    .bg-green { background-color: #30D158; }
-    .bg-orange { background-color: #FF9500; }
-    .bg-red { background-color: #FF3B30; }
     
-    /* Grid Personalizado */
-    .label-micro { color: #8E8E93; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
-    .value-bold { font-weight: 700; color: #1D1D1F; font-size: 1.1rem; }
+    /* Indicadores de Trazabilidad */
+    .person-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #F0F2F5;
+    }
+    
+    .status-pill {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    
+    /* Animación de Latido para Nodos Activos */
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    .live-dot { height: 8px; width: 8px; background-color: #30D158; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. HEADER TECNOLÓGICO
+# 3. LÓGICA DE DATOS DINÁMICOS
+if 'init' not in st.session_state: st.session_state.init = True
+
+# --- HEADER COMPACTO ---
 h1, h2, h3 = st.columns([2, 1, 1])
 with h1:
-    st.markdown("<h2 style='margin:0; color:#5E5CE6;'>🛡️ AIHUMANITY MASTER CONTROL</h2>", unsafe_allow_html=True)
+    st.markdown("<h3 style='margin:0; color:#5E5CE6;'>🛰️ AIHUMANITY MASTER: TENIENTE SUBT.</h3>", unsafe_allow_html=True)
 with h2:
-    st.markdown(f"<p style='margin:0; text-align:right;'><b>OPERADOR:</b> AIH-ADMIN-01</p>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:right;'><b>OPERATIVIDAD:</b> <span class='live-dot'></span> 99.8%</div>", unsafe_allow_html=True)
 with h3:
-    st.markdown(f"<p style='margin:0; text-align:right;'>{datetime.now().strftime('%d/%m %H:%M:%S')}</p>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:right;'>{datetime.now().strftime('%H:%M:%S')} | TURNO B</div>", unsafe_allow_html=True)
 
-st.write("---")
+# 4. GRID PRINCIPAL (REORGANIZADO POR DIMENSIONES)
+row1_col1, row1_col2, row1_col3, row1_col4, row1_col5 = st.columns([1,1,1,1,1])
+with row1_col1: st.metric("META CERO", "96.4%", "+0.2")
+with row1_col2: st.metric("MP10 (µg/m³)", "38.2", "-4.1")
+with row1_col3: st.metric("MP2.5 (µg/m³)", "12.5", "-0.8")
+with row1_col4: st.metric("VIENTO NE", "22 km/h", "ESTABLE")
+with row1_col5: st.metric("HUMEDAD", "45%", "OK")
 
-# 4. FILA 1: KPIs GLOBALES (6 COLUMNAS)
-kpi1, kpi2, kpi3, kpi4, kpi5, kpi6 = st.columns(6)
-with kpi1: st.metric("Meta Cero", "94.2%", "+0.5")
-with kpi2: st.metric("MP10 Prom.", "42.1", "-2.3")
-with kpi3: st.metric("Personal Subt.", "142", "Activos")
-with kpi4: st.metric("Disponibilidad Nodos", "99.8%", "OK")
-with kpi5: st.metric("Viento Max.", "28 km/h", "NE")
-with kpi6: st.metric("IRO Global", "32.1", "Normal", delta_color="inverse")
+st.markdown("---")
 
-# 5. FILA 2: EL CORAZÓN DE LA INFORMACIÓN (DENSIDAD +35%)
-col_left, col_center, col_right = st.columns([1.2, 2.5, 1.3])
+# ZONA DE OPERACIONES (DISTRIBUCIÓN 25% | 50% | 25%)
+left_op, center_op, right_op = st.columns([1, 2, 1])
 
-# --- COLUMNA IZQUIERDA: TRAZABILIDAD Y FLOTA ---
-with col_left:
-    st.markdown("### 👥 Trazabilidad Personal")
-    # Generamos data densa
-    for i in range(4):
+# --- MÓDULO: TRAZABILIDAD DE PERSONAL Y ADEEPMINERS ---
+with left_op:
+    st.markdown("<div class='module-box'>", unsafe_allow_html=True)
+    st.markdown("<b>👥 TRAZABILIDAD PERSONAL (HSE)</b>", unsafe_allow_html=True)
+    personal_data = [
+        ("J. Pérez", "G-4", "SEGURO", "#30D158"),
+        ("M. Soto", "CH-1", "ALERTA", "#FF9500"),
+        ("A. León", "STK-2", "SEGURO", "#30D158"),
+        ("R. Díaz", "G-4", "SEGURO", "#30D158"),
+        ("C. Vega", "N-1", "DANGER", "#FF3B30")
+    ]
+    for nombre, zona, status, color in personal_data:
         st.markdown(f"""
-        <div class="mini-card">
-            <span class="label-micro">Operador {i+1}</span><br>
-            <span class="value-bold">👷 ID-00{120+i}</span> | <span style="font-size:0.8rem;">G-4 / Nivel 2</span>
-            <div style="margin-top:5px;"><span class="status-dot bg-green"></span>Seguro</div>
+        <div class='person-row'>
+            <span>{nombre} <small style='color:grey;'>({zona})</small></span>
+            <span class='status-pill' style='background:{color}; color:white;'>{status}</span>
         </div>
         """, unsafe_allow_html=True)
     
-    st.markdown("### 🚜 Flota Activa")
-    st.markdown("""
-    <div class="mini-card" style="border-left: 4px solid #5E5CE6;">
-        <b>LHD-412 (Chancado)</b><br><span class="label-micro">Temp Motor: 88°C | Ocupación: 92%</span>
-    </div>
-    <div class="mini-card" style="border-left: 4px solid #FF9500;">
-        <b>Dozing D10 (Fase 4)</b><br><span class="label-micro">Alerta Polución Cercana</span>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<br><b>📡 STATUS ADEEPMINERS</b>", unsafe_allow_html=True)
+    st.caption("Nodo 01-ESP32: 🟢 Activo | RSSI: -65dBm")
+    st.caption("Nodo 02-ESP32: 🟢 Activo | RSSI: -72dBm")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# --- COLUMNA CENTRAL: RADAR Y MAPA DE CALOR ---
-with col_center:
-    st.markdown("<p style='text-align:center; font-weight:bold; margin:0;'>RADAR DE RIESGO OPERATIVO ACUMULADO</p>", unsafe_allow_html=True)
+# --- MÓDULO: RADAR HSE INTERACTIVO (ECHART) ---
+with center_op:
+    st.markdown("<div class='module-box'>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; font-weight:bold; margin:0;'>RADAR DE RIESGO OPERATIVO ACUMULATIVO (IRO)</p>", unsafe_allow_html=True)
     
-    # Radar más complejo con 7 ejes
-    fig_radar = go.Figure()
-    fig_radar.add_trace(go.Scatterpolar(
-        r=[40, 25, 30, 80, 90, 45, 20],
-        theta=['Polvo', 'Gases', 'Fatiga', 'EPP', 'Geom.', 'Tránsito', 'Ruido'],
-        fill='toself', fillcolor='rgba(94, 92, 230, 0.2)', line=dict(color='#5E5CE6')
-    ))
-    fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), height=350, margin=dict(t=30, b=30))
-    st.plotly_chart(fig_radar, use_container_width=True)
+    options = {
+        "radar": {
+            "indicator": [
+                {"name": "POLVO (MP)", "max": 100},
+                {"name": "VIENTO", "max": 100},
+                {"name": "GASES", "max": 100},
+                {"name": "TRAZABILIDAD", "max": 100},
+                {"name": "GEOMECÁNICA", "max": 100},
+                {"name": "CHECKLIST", "max": 100},
+            ],
+            "splitNumber": 4,
+            "axisLine": {"lineStyle": {"color": "#E5E9F0"}},
+            "splitLine": {"lineStyle": {"color": "#E5E9F0"}},
+        },
+        "series": [{
+            "type": "radar",
+            "data": [{
+                "value": [42, 35, 20, 95, 15, 88],
+                "name": "Riesgo Actual",
+                "areaStyle": {"color": "rgba(94, 92, 230, 0.3)"},
+                "lineStyle": {"color": "#5E5CE6", "width": 3},
+                "itemStyle": {"color": "#5E5CE6"}
+            }]
+        }]
+    }
+    st_echarts(options=options, height="300px")
     
-    # Mapa de Geolocalización (Vista de Planta)
-    st.markdown("<b>📍 Geolocalización Nodos Adeepminers (Sector Alpha)</b>", unsafe_allow_html=True)
-    map_data = pd.DataFrame(np.random.randn(15, 2) / [250, 250] + [-34.05, -70.45], columns=['lat', 'lon'])
-    st.map(map_data, height=250)
+    # Mapa compacto integrado
+    st.markdown("<b>📍 MAPA DE CALOR SECTORIAL</b>", unsafe_allow_html=True)
+    map_data = pd.DataFrame(np.random.randn(8, 2) / [300, 300] + [-34.05, -70.45], columns=['lat', 'lon'])
+    st.map(map_data, height=180)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# --- COLUMNA DERECHA: CHECKLISTS Y ALERTAS CRÍTICAS ---
-with col_right:
-    st.markdown("### 📝 Checkeo Digital")
-    with st.container():
-        st.markdown("<div class='mini-card'>", unsafe_allow_html=True)
-        st.checkbox("Charla 5 min (Turno B)", value=True)
-        st.checkbox("Inspección LHD-412", value=True)
-        st.checkbox("Test Gases Galería N-4", value=False)
-        st.button("VALIDAR PROTOCOLOS", use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("### 🚨 Log de Eventos")
-    st.error("08:42 - Alerta MP10 Sector 2")
-    st.warning("08:15 - Cambio turno completado")
-    st.info("07:50 - Calibración Nodo ESP-32 OK")
+# --- MÓDULO: CHECKEO Y REPORTES ---
+with right_op:
+    st.markdown("<div class='module-box'>", unsafe_allow_html=True)
+    st.markdown("<b>📝 CHECKEO DIGITAL HSE</b>", unsafe_allow_html=True)
+    st.checkbox("EPP Completo (Turno)", value=True)
+    st.checkbox("Test de Alcohol/Fatiga", value=True)
+    st.checkbox("Ventilación Verificada", value=False)
+    st.button("ENVIAR REPORTE KPI", use_container_width=True)
     
-    # Matriz de Riesgo 5x5 simplificada
-    st.markdown("### 📊 Matriz de Criticidad")
-    risk_data = np.random.randint(1, 5, size=(5, 5))
-    st.dataframe(pd.DataFrame(risk_data, columns=['C1','C2','C3','C4','C5']), height=150)
+    st.markdown("<hr style='margin:10px 0;'>", unsafe_allow_html=True)
+    st.markdown("<b>⚠️ ALERTAS ACTIVAS</b>", unsafe_allow_html=True)
+    st.error("G-4: Saturación de Polvo")
+    st.warning("P-1: Mantenimiento Dozer")
+    
+    st.markdown("<hr style='margin:10px 0;'>", unsafe_allow_html=True)
+    st.markdown("<b>📊 KPI SEMANAL</b>", unsafe_allow_html=True)
+    st.line_chart(np.random.randn(10, 1), height=100)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# 6. FOOTER INDUSTRIAL
-st.divider()
-st.markdown("""
-<div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #8E8E93;">
-    <span>AIHumanity Master | TRL-3 Prototype | No masivo</span>
-    <span>Sincronización Cloud: OK (0.2s latencia)</span>
-    <span>Arquitectura antes que escala</span>
-</div>
-""", unsafe_allow_html=True)
+# 5. BARRA DE ACCIÓN INFERIOR
+st.markdown("---")
+f1, f2, f3 = st.columns([2,1,1])
+with f1: st.button("🚨 STOP-WORK AUTHORITY (DETENCIÓN TOTAL)", type="secondary", use_container_width=True)
+with f2: st.button("📡 RESET NODOS", use_container_width=True)
+with f3: st.button("🛠️ ADMIN DIAGNÓSTICO", use_container_width=True)
 
-# 7. ANIMACIÓN DE DATOS (Mantiene el entorno vivo)
-time.sleep(2)
+# REFRESH PARA INTERACTIVIDAD
+time.sleep(1.5)
 st.rerun()
