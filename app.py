@@ -1,135 +1,96 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import time
+import plotly.graph_objects as go
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
 from datetime import datetime
+import time
 
-# --- 1. CONFIGURACIÓN DE IDENTIDAD Y LENGUAJE ---
+# --- 1. CONFIGURACIÓN DE IDENTIDAD AIH-MASTER ---
 if 'lang' not in st.session_state: st.session_state.lang = "EN"
 if 'auth' not in st.session_state: st.session_state.auth = False
 
-translations = {
-    "EN": {
-        "title": "AIHumanity | HSE | CONTROL CENTER",
-        "status": "SYSTEM STATUS: ACTIVE",
-        "nodes": "70k NODES SYNCED",
-        "traffic": "DATA TRAFFIC",
-        "op_access": "OPERATOR ACCESS",
-        "ad_access": "ADMIN ACCESS",
-        "icr": "RISK INDEX (ICR)",
-        "pm10": "DUST MP10",
-        "pm25": "DUST MP2.5",
-        "wave": "REAL-TIME WAVE ANALYSIS",
-        "logout": "TERMINATE SESSION"
-    },
-    "ES": {
-        "title": "AIHumanity | HSE | CENTRO DE CONTROL",
-        "status": "ESTADO DEL SISTEMA: ACTIVO",
-        "nodes": "70k NODOS SINCRONIZADOS",
-        "traffic": "TRÁFICO DE DATOS",
-        "op_access": "ACCESO OPERADOR",
-        "ad_access": "ACCESO ADMIN",
-        "icr": "ÍNDICE DE RIESGO (ICR)",
-        "pm10": "POLVO MP10",
-        "pm25": "POLVO MP2.5",
-        "wave": "ANÁLISIS DE ONDAS T-REAL",
-        "logout": "CERRAR SESIÓN"
-    }
-}
+# Traducciones Reactivas
+L = {
+    "EN": {"title": "AIHumanity | PRO-POWER CONTROL", "icr": "RISK INDEX (ICR)", "dust": "DUST PM10", "wind": "WIND SPEED", "wave": "NEURAL RISK WAVEFORM"},
+    "ES": {"title": "AIHumanity | CONTROL PRO-POWER", "icr": "ÍNDICE DE RIESGO (ICR)", "dust": "POLVO PM10", "wind": "VEL. VIENTO", "wave": "ONDA NEURAL DE RIESGO"}
+}[st.session_state.lang]
 
-L = translations[st.session_state.lang]
+st.set_page_config(page_title=L['title'], layout="wide")
 
-# --- 2. DISEÑO INDUSTRIAL HIGH-CONTRAST (WHITE MODE) ---
-st.set_page_config(page_title=L['title'], layout="wide", initial_sidebar_state="expanded")
-
-st.markdown(f"""
+# --- 2. DISEÑO HIGH-CONTRAST (CUPERTINO WHITE) ---
+st.markdown("""
 <style>
-    /* Estética Cupertino High-Contrast */
-    html, body, [class*="css"], [data-testid="stAppViewContainer"] {{
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }}
-    
-    /* Sidebar */
-    [data-testid="stSidebar"] {{ background-color: #F0F2F6 !important; border-right: 2px solid #000; }}
-
-    /* Cards Brutalistas */
-    .stMetric {{
-        background: #FFFFFF !important;
-        border: 3px solid #000000 !important;
-        border-radius: 0px !important;
-        padding: 20px !important;
-        box-shadow: 8px 8px 0px #000000;
-    }}
-    
-    div[data-testid="stMetricValue"] {{ color: #D35400 !important; font-weight: 800; }}
-    
-    /* Botones Industriales */
-    .stButton>button {{
-        width: 100%;
-        border-radius: 0px;
-        border: 2px solid #000;
-        background-color: #FFFFFF;
-        color: #000;
-        font-weight: bold;
-        transition: 0.2s;
-    }}
-    .stButton>button:hover {{ background-color: #000; color: #FFF; }}
-
-    /* Status Bar Negra */
-    .status-bar {{
-        background: #000;
-        color: #FFF;
-        padding: 10px 25px;
-        display: flex;
-        justify-content: space-between;
-        font-weight: bold;
-        margin-bottom: 20px;
-    }}
+    html, body, [data-testid="stAppViewContainer"] { background-color: #FFFFFF !important; color: #000000 !important; }
+    [data-testid="stSidebar"] { background-color: #F8F9FA !important; border-right: 2px solid #000; }
+    .stMetric { background: #FFF !important; border: 3px solid #000 !important; box-shadow: 8px 8px 0px #000; padding: 15px; }
+    div[data-testid="stMetricValue"] { color: #D35400 !important; font-weight: 800; font-size: 3rem; }
+    .status-bar { background: #000; color: #FFF; padding: 10px; display: flex; justify-content: space-around; font-weight: bold; margin-bottom: 20px; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. LÓGICA DE ACCESO (GATEWAY) ---
+# --- 3. MOTOR DE INTELIGENCIA (SCIKIT-LEARN) ---
+# Explotamos Isolation Forest para detectar anomalías en los 70k nodos
+class AIH_Predictor:
+    def __init__(self):
+        self.model = IsolationForest(contamination=0.05, random_state=42)
+        self.scaler = StandardScaler()
+
+    def get_risk_score(self, data):
+        if len(data) < 10: return 100.0
+        scaled_data = self.scaler.fit_transform(data[['val1', 'val2']])
+        self.model.fit(scaled_data)
+        scores = self.model.decision_function(scaled_data[-1:])
+        return max(0, min(100, 100 + (scores[0] * 100)))
+
+# --- 4. PORTAL DE ACCESO (GATEWAY) ---
 if not st.session_state.auth:
-    st.markdown("<h1 style='text-align:center; border-bottom: 5px solid #000;'>AIHumanity | SYSTEM GATEWAY</h1>", unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader(L['op_access'])
-        if st.text_input("Operator PIN", type="password") == "1234":
-            if st.button("UNLOCK OPERATOR"): st.session_state.auth = True; st.session_state.role = "OP"; st.rerun()
-            
-    with col2:
-        st.subheader(L['ad_access'])
-        if st.text_input("Admin Password", type="password") == "Admin":
-            if st.button("UNLOCK ADMIN"): st.session_state.auth = True; st.session_state.role = "AD"; st.rerun()
+    st.markdown("<h1 style='text-align:center; border: 4px solid #000; padding: 20px;'>GATEWAY UNLOCKED | AIH-MASTER</h1>", unsafe_allow_html=True)
+    role = st.selectbox("SELECT ROLE", ["Operator", "Administrator"])
+    pwd = st.text_input("AUTHORIZATION KEY", type="password")
+    if st.button("EXECUTE ACCESS"):
+        if (role == "Operator" and pwd == "1234") or (role == "Administrator" and pwd == "Admin"):
+            st.session_state.auth = True; st.session_state.role = role; st.rerun()
     st.stop()
 
-# --- 4. INTERFAZ DE CONTROL ACTIVA ---
-st.sidebar.radio("🌐 Language", ["EN", "ES"], key="lang_choice", on_change=lambda: setattr(st.session_state, 'lang', st.session_state.lang_choice))
+# --- 5. DASHBOARD DINÁMICO (PLOTLY EXPLOTATION) ---
+st.sidebar.radio("🌐 LANGUAGE", ["EN", "ES"], key="lang", index=0 if st.session_state.lang == "EN" else 1)
 
-st.markdown(f"""
-<div class='status-bar'>
-    <span>{L['status']}</span>
-    <span>{L['traffic']}: 14.2 GB/s</span>
-    <span>{L['nodes']}</span>
-    <span>🕒 {datetime.now().strftime('%H:%M:%S')}</span>
-</div>
-""", unsafe_allow_html=True)
-
+st.markdown(f"<div class='status-bar'><span>CONNECTIVITY: 100%</span><span>TRAFFIC: 18.5 GB/s</span><span>NODES: 70,000 ACTIVE</span></div>", unsafe_allow_html=True)
 st.title(f"📊 {L['title']}")
 
-# Métricas Críticas (HSE Priority)
+# Generación de Datos Sintéticos para Simular los 70k Nodos
+if 'buffer' not in st.session_state:
+    st.session_state.buffer = pd.DataFrame(columns=['val1', 'val2', 'Time'])
+
+new_data = {'val1': np.random.normal(20, 2), 'val2': np.random.normal(150, 15), 'Time': datetime.now().strftime('%H:%M:%S')}
+st.session_state.buffer = pd.concat([st.session_state.buffer, pd.DataFrame([new_data])]).tail(40)
+
+# Cálculo ICR vía Machine Learning
+engine = AIH_Predictor()
+icr_val = engine.get_risk_score(st.session_state.buffer)
+
+# Métricas de Alta Visibilidad
 c1, c2, c3 = st.columns(3)
-c1.metric(L['icr'], "94.2%", "Normal")
-c2.metric(L['pm10'], "12.5 µg/m³", "-1.2")
-c3.metric(L['pm25'], "5.8 µg/m³", "0.4", delta_color="inverse")
+c1.metric(L['icr'], f"{icr_val:.1f}%")
+c2.metric(L['dust'], f"{new_data['val2']:.1f} µg/m³")
+c3.metric(L['wind'], "14.2 KM/H")
 
-# Gráfico de Ondas de Riesgo
+# --- ONDAS DE RIESGO (PLOTLY ENGINE) ---
 st.subheader(L['wave'])
-chart_data = pd.DataFrame(np.random.randn(40, 2), columns=['Seismic', 'Dust_Pulse'])
-st.line_chart(chart_data, color=["#000000", "#D35400"])
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=st.session_state.buffer['Time'], y=st.session_state.buffer['val2'],
+                         mode='lines+markers', line=dict(color='#000000', width=3), name="PM10 Pulse"))
+fig.add_trace(go.Scatter(x=st.session_state.buffer['Time'], y=st.session_state.buffer['val1']*5,
+                         mode='lines', line=dict(color='#D35400', width=4, dash='dot'), name="Stability Index"))
 
-if st.sidebar.button(L['logout']):
-    st.session_state.auth = False; st.rerun()
+fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=20, b=20),
+                  xaxis=dict(showgrid=True, gridcolor='#EEE'), yaxis=dict(showgrid=True, gridcolor='#EEE'))
+st.plotly_chart(fig, use_container_width=True)
+
+
+
+# Auto-refresh cada 2 segundos
+time.sleep(2)
+st.rerun()
