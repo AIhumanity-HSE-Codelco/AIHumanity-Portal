@@ -4,120 +4,117 @@ import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
 
-# --- 1. CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(page_title="AIH MASTER | V27 CUPERTINO", layout="wide")
+# --- 1. CONFIGURACIÓN INMUTABLE ---
+st.set_page_config(page_title="AIH MASTER | BÚNKER V28", layout="wide")
 
-# --- 2. INYECCIÓN DE ESTILO ELEGANTE (CUPERTINO WHITE) ---
-def apply_cupertino_style():
+# --- 2. INYECCIÓN DE BLINDAJE VISUAL (CUPERTINO WHITE) ---
+def apply_bunker_style():
     st.markdown("""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        /* Base Blanca y Tipografía Apple */
+        .stApp { background-color: #FFFFFF !important; color: #1D1D1F !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; }
         
-        /* Fondo y Fuente */
-        .stApp { background-color: #FFFFFF; color: #1D1D1F; font-family: 'Inter', sans-serif; }
+        /* Sidebar Blindada (Gris F5) */
+        section[data-testid="stSidebar"] { background-color: #F5F5F7 !important; border-right: 1px solid #D2D2D7 !important; width: 350px !important; }
         
-        /* Sidebar Estilo Apple */
-        section[data-testid="stSidebar"] { 
-            background-color: #F5F5F7 !important; 
-            border-right: 1px solid #D2D2D7; 
-            width: 320px !important;
-        }
-        
-        /* Tarjetas de Métricas (Glassmorphism suave) */
+        /* Tarjetas de Métricas Elegantes */
         div[data-testid="stMetric"] { 
             background-color: #FFFFFF !important; 
             border: 1px solid #D2D2D7 !important; 
-            padding: 20px !important; 
-            border-radius: 16px !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+            padding: 22px !important; 
+            border-radius: 18px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
         }
         
-        /* Botones y Radio Selectors */
-        .stRadio > label { font-weight: 600 !important; color: #1D1D1F !important; }
-        .stRadio div[role="radiogroup"] { gap: 4px; }
+        /* Títulos y Divisores */
+        h1, h2, h3 { color: #1D1D1F !important; font-weight: 600 !important; letter-spacing: -0.02em !important; }
+        .stRadio > label { font-size: 1.1em !important; font-weight: 700 !important; color: #86868B !important; margin-bottom: 15px !important; }
         
-        /* Títulos */
-        h1, h2, h3 { color: #1D1D1F !important; font-weight: 600 !important; letter-spacing: -0.5px; }
-        .module-label { color: #0071E3; font-size: 0.8em; font-weight: 700; text-transform: uppercase; margin-top: 20px; }
+        /* Scrollbar Fina */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #D2D2D7; border-radius: 10px; }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 3. ESTRUCTURA DE NAVEGACIÓN DESPLEGADA ---
-ANALIZADORES = {
-    "💎 ESTRATÉGICO": ["01 EL CEREBRO (IRC)", "13 REPORTES BI", "19 AUDITORÍA", "25 MESH STATUS"],
-    "💨 AMBIENTAL": ["02 GASES (M06)", "06 ADMS/POLVO", "07 SISMO", "11 ACÚSTICA", "21 VENTILACIÓN 3D"],
-    "🧬 HUMANO": ["03 BIOMETRÍA", "10 BEHAVIOR", "14 OCULOMETRÍA", "15 CARGA COGNITIVA", "16 ESTRÉS TÉRMICO"],
-    "⚙️ OPERATIVO": ["04 ENERGÍA", "05 GIS/TALUDES", "08 ACTIVOS", "12 MANTENIMIENTO", "22 COLISIÓN H-M", "23 STOCKPILES", "24 CALIDAD ENERGÍA"],
-    "🚨 CRÍTICO": ["09 EMERGENCIAS", "17 INCIDENTES", "18 CAUSA RAÍZ", "20 NOTIFICACIONES"]
-}
+# --- 3. DICCIONARIO PLANO DE 25 ANALIZADORES ---
+# (Lista inalterable para el Router)
+MODULOS_25 = [
+    "01 💎 EL CEREBRO (IRC)", "02 💨 GASES (M06)", "03 🧬 BIOMETRÍA", "04 ⚡ ENERGÍA", 
+    "05 🗺️ GIS/TALUDES", "06 🌪️ ADMS/POLVO", "07 🌍 SISMO", "08 ⚙️ ACTIVOS", 
+    "09 🚨 EMERGENCIAS", "10 👥 BEHAVIOR", "11 🔊 ACÚSTICA", "12 🛠️ MANTENIMIENTO", 
+    "13 📊 REPORTES BI", "14 👁️ OCULOMETRÍA", "15 🧠 CARGA COGNITIVA", "16 🌡️ ESTRÉS TÉRMICO",
+    "17 📝 INCIDENTES", "18 📉 CAUSA RAÍZ", "19 ⚖️ AUDITORÍA", "20 📢 NOTIFICACIONES",
+    "21 🌪️ VENTILACIÓN 3D", "22 🚜 COLISIÓN H-M", "23 📦 STOCKPILES", "24 ⚡ CALIDAD ENERGÍA",
+    "25 📡 MESH STATUS"
+]
 
 # --- 4. RENDERIZADO DE MÓDULOS ---
 
 def render_01_cerebro():
-    st.title("01 💎 El Cerebro")
-    st.markdown("---")
-    # Radar de 25 Analizadores con colores suaves
-    etiquetas = [m[:6] for sub in ANALIZADORES.values() for m in sub]
-    valores = np.random.randint(30, 70, 25)
+    st.title("01 💎 Inferencia de Riesgo Compuesto (IRC)")
+    st.write("### Vista de Gobernanza 360°")
+    
+    etiquetas = [m[:6] for m in MODULOS_25]
+    valores = np.random.randint(35, 65, 25)
     
     fig = go.Figure(go.Scatterpolar(
         r=valores, theta=etiquetas, fill='toself', 
-        line_color='#0071E3', fillcolor='rgba(0, 113, 227, 0.1)'
+        line_color='#0071E3', fillcolor='rgba(0, 113, 227, 0.08)'
     ))
     fig.update_layout(
-        polar=dict(radialaxis=dict(visible=False), angularaxis=dict(gridcolor="#D2D2D7")),
-        paper_bgcolor='rgba(0,0,0,0)', font=dict(color="#1D1D1F", size=10), margin=dict(t=20, b=20)
+        polar=dict(radialaxis=dict(visible=False), angularaxis=dict(gridcolor="#E5E5E5", tickfont=dict(size=9))),
+        paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=30, b=30)
     )
     st.plotly_chart(fig, use_container_width=True)
     
     
-    c1, c2, c3 = st.columns(3)
-    c1.metric("IRC Global", f"{valores.mean():.1f}%", "Estable")
-    c2.metric("Nodos Activos", "70,000", "Sync")
-    c3.metric("Riesgo Crítico", "Bajo", "Seguro")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("IRC PROMEDIO", f"{valores.mean():.1f}%", "Estable")
+    c2.metric("SALUD DE RED", "99.9%", "Sync")
+    c3.metric("NODOS TRL-4", "70,000", "Activos")
+    c4.metric("ALERTA HSE", "0", "Seguro")
 
-def render_generic(nombre):
+def render_fallback(nombre):
     st.title(nombre)
     st.markdown("---")
     c1, c2 = st.columns([2, 1])
     with c1:
-        st.write("### Tendencia de Análisis")
-        st.line_chart(np.random.normal(50, 5, 24), color="#0071E3")
+        st.write("### Telemetría Crítica")
+        st.line_chart(np.random.normal(50, 4, 24), color="#0071E3")
     with c2:
-        st.metric("Estado", "Óptimo", "Sync")
-        st.info(f"Telemetría TRL-4 activa para {nombre}.")
+        st.metric("Estado Analizador", "ACTIVO", "Sync")
+        st.info(f"Módulo {nombre} operando bajo protocolos de blindaje TRL-4.")
 
-# --- 5. NAVEGACIÓN Y MAIN ---
+# --- 5. MOTOR DE NAVEGACIÓN Y MAIN ---
 def main():
-    apply_cupertino_style()
+    apply_bunker_style()
     
     with st.sidebar:
-        st.markdown("<h2 style='color:#1D1D1F; font-size: 1.5em;'>AIH MASTER</h2>", unsafe_allow_html=True)
-        st.caption(f"V27.0 | {datetime.now().strftime('%d %b, %H:%M')}")
+        st.markdown("<h2 style='color:#1D1D1F; font-size: 1.6em;'>AIH MASTER</h2>", unsafe_allow_html=True)
+        st.caption(f"MODO BÚNKER | {datetime.now().strftime('%H:%M:%S')}")
         st.divider()
         
-        # MENÚ DESPLEGADO TOTAL
-        st.markdown("<p class='module-label'>Selección de Analizador</p>", unsafe_allow_html=True)
-        
-        # Recorremos el diccionario para crear un menú visualmente estructurado
-        opciones_planas = [item for sublist in ANALIZADORES.values() for item in sublist]
-        seleccion = st.radio("Módulos de la Bóveda:", opciones_planas, label_visibility="collapsed")
+        # MENÚ DESPLEGADO (25 ANALIZADORES)
+        st.markdown("**SISTEMA DE GOBERNANZA**")
+        seleccion = st.radio("Lista de Analizadores:", MODULOS_25, label_visibility="collapsed")
         
         st.divider()
-        st.markdown("🌐 **Nodo:** SP32-Master\n\n🛡️ **Estado:** Blindado")
+        st.markdown("🛡️ **Blindaje:** Nivel 4 Activo\n\n🌐 **Célula:** SP32-Master")
 
-    # --- ROUTER ---
+    # --- ROUTER DE EMERGENCIA ---
     if "01" in seleccion:
         render_01_cerebro()
     elif "17" in seleccion:
-        st.title("17 📝 Incidentes")
-        st.text_input("Localización")
+        st.title("17 📝 Reporte de Incidentes")
+        st.text_input("Localización del Evento")
         st.button("Registrar en Bóveda")
     elif "21" in seleccion:
         st.title("21 🌪️ Ventilación 3D")
         
+        st.info("Simulación de flujos de aire activa.")
     else:
-        render_generic(seleccion)
+        # Si no tiene vista especial, usa el dashboard seguro
+        render_fallback(seleccion)
 
 if __name__ == "__main__":
     main()
