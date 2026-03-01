@@ -1,39 +1,29 @@
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, Float, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
 import uvicorn
 
 # =========================
-# CONFIGURACIÓN INDUSTRIAL
+# CONFIGURACIÓN DE NÚCLEO (FIXED)
 # =========================
 DATABASE_URL = "sqlite:///./aih_hse_vault.db"
 
+# Fix para SQLite: check_same_thread=False es vital para FastAPI
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-app = FastAPI(title="AIHumanity HSE Master API", version="5.0.0")
-
-# Habilitar comunicación con la UI (CORS)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = FastAPI(title="AIHumanity HSE Master API")
 
 # =========================
-# MODELOS DE PERSISTENCIA (DB)
+# MODELO DE BASE DE DATOS
 # =========================
 class SensorData(Base):
-    __tablename__ = "telemetry_logs"
-
+    __tablename__ = "sensor_data"
     id = Column(Integer, primary_key=True, index=True)
-    worker_id = Column(String, index=True)
+    worker_id = Column(String)
     location = Column(String)
     pm25 = Column(Float)
     humidity = Column(Float)
@@ -42,20 +32,24 @@ class SensorData(Base):
     risk_index = Column(Float)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
+# Crear tablas si no existen
 Base.metadata.create_all(bind=engine)
 
 # =========================
-# SCHEMAS DE VALIDACIÓN (PYDANTIC)
+# SCHEMAS DE ENTRADA (PYDANTIC V2 FIX)
 # =========================
 class SensorInput(BaseModel):
-    worker_id: str = Field(..., example="W-70K-001")
-    location: str = Field(..., example="Sector_Chancado_Norte")
-    pm25: float = Field(..., gt=0)
-    humidity: float = Field(..., ge=0, le=100)
-    wind_speed: float = Field(..., ge=0)
-    helmet_status: str = Field(..., pattern="^(ON|OFF)$")
+    # Usamos ConfigDict para compatibilidad total con Pydantic v2 de tu inventario
+    model_config = ConfigDict(from_attributes=True)
+    
+    worker_id: str
+    location: str
+    pm25: float
+    humidity: float
+    wind_speed: float
+    helmet_status: str  # "ON" or "OFF"
 
-# Dependencia para manejo de DB
+# Inyección de Dependencia de DB
 def get_db():
     db = SessionLocal()
     try:
@@ -64,55 +58,54 @@ def get_db():
         db.close()
 
 # =========================
-# MOTOR DE RIESGO PREVENTIVO (ICR)
+# MOTOR DE RIESGO (ICR)
 # =========================
-def calculate_risk_index(data: SensorInput) -> float:
-    # Lógica de pesos proporcionales HSE
-    score = (data.pm25 * 0.4) + (data.humidity * 0.1) + (data.wind_speed * 0.2)
-    if data.helmet_status == "OFF":
-        score += 30.0  # Penalización crítica por EPP
-    return round(min(score, 100.0), 2)
+def calculate_risk(pm25, humidity, wind_speed, helmet_status):
+    risk = (pm25 * 0.3) + (humidity * 0.1) + (wind_speed * 0.2)
+    if helmet_status.upper() == "OFF":
+        risk += 30
+    return round(min(risk, 100), 2)
 
 # =========================
-# ENDPOINTS (INGESTIÓN & CONTROL)
+# ENDPOINTS LIMPIOS
 # =========================
 
-@app.post("/ingest", status_code=201)
-def post_telemetry(data: SensorInput, db: Session = Depends(get_db)):
+@app.post("/ingest")
+def ingest_data(data: SensorInput, db: Session = Depends(get_db)):
     try:
-        calculated_icr = calculate_risk_index(data)
+        icr = calculate_risk(data.pm25, data.humidity, data.wind_speed, data.helmet_status)
         
-        new_record = SensorData(
-            **data.model_dump(),
-            risk_index=calculated_icr
+        # Convertir Pydantic a SQLAlchemy Model
+        db_record = SensorData(
+            worker_id=data.worker_id,
+            location=data.location,
+            pm25=data.pm25,
+            humidity=data.humidity,
+            wind_speed=data.wind_speed,
+            helmet_status=data.helmet_status,
+            risk_index=icr
         )
         
-        db.add(new_record)
+        db.add(db_record)
         db.commit()
-        db.refresh(new_record)
-        return {"status": "SUCCESS", "record_id": new_record.id, "icr": calculated_icr}
+        db.refresh(db_record)
+        return {"status": "SUCCESS", "risk_index": icr}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database Sync Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/dashboard/summary")
-def get_global_status(db: Session = Depends(get_db)):
+@app.get("/dashboard")
+def get_dashboard(db: Session = Depends(get_db)):
     records = db.query(SensorData).all()
     if not records:
-        return {"status": "NO_DATA", "avg_risk": 0}
+        return {"total_events": 0, "average_risk": 0, "global_status": "NO_DATA"}
 
     avg_risk = sum(r.risk_index for r in records) / len(records)
     
-    # Lógica de semáforo HSE
-    state = "SAFE (GREEN)"
-    if avg_risk > 75: state = "CRITICAL (RED) - STOP WORK"
-    elif avg_risk > 45: state = "WARNING (YELLOW)"
-
     return {
-        "active_nodes": len(records),
-        "global_icr": round(avg_risk, 2),
-        "alert_level": state,
-        "last_update": datetime.utcnow()
+        "total_events": len(records),
+        "average_risk": round(avg_risk, 2),
+        "global_status": "STOP_WORK" if avg_risk > 80 else "WARNING" if avg_risk > 50 else "SAFE"
     }
 
 if __name__ == "__main__":
