@@ -4,108 +4,120 @@ import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
 
-# --- 1. CONFIGURACIÓN INMUTABLE V35.1 ---
-st.set_page_config(page_title="AIH MASTER | RECOVERY 80", layout="wide")
+# --- 1. CONFIGURACIÓN DE NÚCLEO INMUNE ---
+st.set_page_config(page_title="AIH MASTER | MULTI-DEVICE", layout="wide")
 
-# --- 2. BLINDAJE VISUAL DE ALTO CONTRASTE (FONDO OSCURO) ---
+# --- 2. BLINDAJE VISUAL DINÁMICO (PC / TABLET / MOBILE) ---
 def apply_bunker_style():
     st.markdown("""
         <style>
-        .stApp { background-color: #0E1117 !important; color: #FFFFFF !important; }
-        section[data-testid="stSidebar"] { background-color: #161B22 !important; border-right: 1px solid #30363D !important; width: 450px !important; }
-        div[data-testid="stMetric"] { 
-            background-color: #1C2128 !important; border: 1px solid #30363D !important; 
-            padding: 15px !important; border-radius: 12px !important;
+        /* Base Cupertino White */
+        .stApp { background-color: #FFFFFF !important; color: #1D1D1F !important; font-family: -apple-system, system-ui, sans-serif !important; }
+        
+        /* Sidebar Optimizado para Touch y Click */
+        section[data-testid="stSidebar"] { 
+            background-color: #F5F5F7 !important; 
+            border-right: 1px solid #D2D2D7 !important; 
+            width: clamp(280px, 20vw, 400px) !important; 
         }
-        h1, h2, h3 { color: #58A6FF !important; font-weight: 700 !important; }
-        .stRadio > label { color: #8B949E !important; font-size: 0.8em !important; font-weight: bold !important; }
-        /* Fix para que la gráfica no desaparezca */
-        .js-plotly-plot { background-color: transparent !important; border-radius: 15px !important; }
+
+        /* Tipografía Optimizada: Responsiva */
+        h1 { font-size: clamp(1.5rem, 4vw, 2.5rem) !important; font-weight: 700 !important; color: #1D1D1F !important; }
+        h3 { font-size: clamp(1rem, 2.5vw, 1.5rem) !important; color: #86868B !important; }
+        
+        /* Métricas Estilo Card Apple */
+        div[data-testid="stMetric"] { 
+            background-color: #FFFFFF !important; border: 1px solid #D2D2D7 !important; 
+            padding: clamp(10px, 2vw, 20px) !important; border-radius: 16px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+        }
+
+        /* Ajuste de Números y Letras en Gráficos */
+        .js-plotly-plot .plotly .modebar { display: none !important; }
+        
+        /* Ocultar etiquetas del radar si son > 40 para evitar colapso visual en móviles */
+        @media (max-width: 768px) {
+            .stPlotlyChart { height: 400px !important; }
+        }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 3. DICCIONARIO MAESTRO DE LOS 80 ANALIZADORES (RESUMEN ESTRATÉGICO) ---
-# Se cargan dinámicamente para no saturar el sidebar
-MODULOS_80 = [f"{str(i).zfill(2)} Analizador" for i in range(1, 81)]
-NOMBRES_EPICOS = {
-    "01": "💎 EL CEREBRO (IRC-80)", "21": "🌪️ VENTILACIÓN 3D", "41": "☢️ RADIACTIVIDAD",
-    "57": "🛰️ GPS RTK PRECISION", "66": "🕸️ MICRO-SISMICIDAD", "80": "♾️ ENTROPÍA"
+# --- 3. DICCIONARIO DE GOBERNANZA (GRUPOS LÓGICOS) ---
+CATEGORIAS = {
+    "💎 ESTRATÉGICO": ["01 💎 EL CEREBRO (IRC-80)", "13 📊 REPORTES BI", "80 ♾️ ENTROPÍA"],
+    "💨 HSE & QUÍMICA": ["02 💨 GASES", "41 ☢️ RADIACTIVIDAD", "42 🌫️ RADÓN", "43 🧪 XRF", "48 🧪 REACTIVOS"],
+    "🛰️ COM & AERO": ["49 🛰️ SATELITAL", "57 🛰️ GPS RTK", "58 🚁 UTM DRONES", "63 🛡️ ADS-B"],
+    "🌍 GEOTECNIA": ["05 🗺️ GIS", "07 🌍 SISMO", "26 🛰️ RADAR SUBSIDENCIA", "66 🕸️ MICRO-SISMO"],
+    "🚜 OPERACIONES": ["08 ⚙️ ACTIVOS", "21 🌪️ VENTILACIÓN", "29 🚛 FATIGA", "39 🤖 AUTÓNOMOS"]
 }
 
-# --- 4. MOTOR DE LA GRÁFICA INDESTRUCTIBLE ---
+# --- 4. MOTOR DE RENDERIZADO IRC-80 (BLINDADO) ---
 
-def render_radar_80():
+def render_radar_cupertino_80():
     st.title("01 💎 Cerebro de Riesgo Total (IRC-80)")
     
-    # Generación de 80 puntos de datos reales/simulados
+    # Generar datos para los 80 ejes
     etiquetas = [str(i).zfill(2) for i in range(1, 81)]
-    valores = np.random.randint(20, 95, 80)
-    # Cerramos el círculo para que la gráfica sea perfecta
-    valores = np.append(valores, valores[0])
-    etiquetas = np.append(etiquetas, etiquetas[0])
+    valores = np.random.randint(25, 85, 80)
+    
+    # Cerrar el trazado
+    v_plot = np.append(valores, valores[0])
+    e_plot = np.append(etiquetas, etiquetas[0])
     
     fig = go.Figure()
     
-    # Capa 1: El Área de Riesgo
+    # Capa de Riesgo Compuesto
     fig.add_trace(go.Scatterpolar(
-        r=valores, theta=etiquetas, fill='toself',
-        name='Perfil de Riesgo AIH',
-        line=dict(color='#58A6FF', width=2),
-        fillcolor='rgba(88, 166, 255, 0.2)'
-    ))
-    
-    # Capa 2: Puntos de Control (Nodos)
-    fig.add_trace(go.Scatterpolar(
-        r=valores, theta=etiquetas, mode='markers',
-        marker=dict(size=4, color='#34D399')
+        r=v_plot, theta=e_plot, fill='toself',
+        line=dict(color='#0071E3', width=1.5),
+        fillcolor='rgba(0, 113, 227, 0.08)',
+        hoverinfo='r+theta'
     ))
 
     fig.update_layout(
         polar=dict(
-            bgcolor="#161B22",
-            radialaxis=dict(visible=True, showline=False, gridcolor="#30363D", tickfont=dict(color="#8B949E", size=8)),
-            angularaxis=dict(gridcolor="#30363D", tickfont=dict(color="#8B949E", size=7), rotation=90)
+            bgcolor="white",
+            radialaxis=dict(visible=True, showline=False, gridcolor="#E5E5E5", tickfont=dict(size=8, color="#86868B")),
+            angularaxis=dict(gridcolor="#E5E5E5", tickfont=dict(size=6, color="#86868B"))
         ),
-        showlegend=False,
         paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        height=900,
-        margin=dict(t=30, b=30, l=50, r=50)
+        margin=dict(t=40, b=40, l=40, r=40),
+        height=700 if st.sidebar.checkbox("Expandir Radar", True) else 400
     )
     
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+    st.plotly_chart(fig, use_container_width=True)
     
 
-    # KPIs de Control
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("IRC PROMEDIO", f"{valores.mean():.1f}%", "Estable")
-    c2.metric("VAR. CRÍTICAS", "80 Analizadores", "Full Sync")
-    c3.metric("NODOS MESH", "70,000", "Activos")
-    c4.metric("PRECISIÓN GPS", "1.2 cm", "RTK FIX")
+    # KPIs Responsivos
+    c1, c2, c3 = st.columns([1, 1, 1])
+    with c1: st.metric("IRC AGREGADO", f"{valores.mean():.1f}%", "Nominal")
+    with c2: st.metric("ESTADO GPS", "FIX RTK", "1.2cm")
+    with c3: st.metric("NODOS MESH", "70,000", "Sync")
 
 # --- 5. NAVEGACIÓN Y MAIN ---
 def main():
     apply_bunker_style()
     
     with st.sidebar:
-        st.markdown("<h2 style='color:#58A6FF;'>AIH MASTER V35.1</h2>", unsafe_allow_html=True)
-        st.caption(f"MODO RECUPERACIÓN GRÁFICA | {datetime.now().strftime('%H:%M:%S')}")
+        st.markdown("<h2 style='color:#1D1D1F;'>AIH MASTER V36</h2>", unsafe_allow_html=True)
+        st.caption(f"80 ANALIZADORES | TRL-4 | {datetime.now().strftime('%H:%M')}")
         st.divider()
         
-        # Filtro rápido para no perderse en los 80 módulos
-        grupo = st.selectbox("Categoría de Análisis:", ["Operaciones", "HSE / Nuclear", "Comunicaciones / Aero", "Caos / Entropía"])
-        
-        # El radio ahora es dinámico para no saturar
-        seleccion = st.radio("Analizador Seleccionado:", MODULOS_80[:20], label_visibility="collapsed")
+        # MEJORA DE MENÚ: Navegación por Grupo
+        cat_select = st.selectbox("DOMINIO DE ANÁLISIS:", list(CATEGORIAS.keys()))
+        mod_select = st.radio("ANALIZADOR:", CATEGORIAS[cat_select])
         
         st.divider()
-        st.info("Gráfica Blindada: Si desaparece, use 'R' para refrescar el búnker.")
+        st.caption("📱 Dispositivo: Optimizado para PC/Tablet/Móvil")
 
-    # ROUTER DE RENDERIZADO
-    if "01" in seleccion or "Analizador" in seleccion:
-        render_radar_80()
+    # ROUTER DE SECCIONES
+    if "01" in mod_select:
+        render_radar_cupertino_80()
     else:
-        st.warning("Seleccione Módulo 01 para ver la gráfica total.")
+        st.title(mod_select)
+        st.write("### Telemetría de Analizador")
+        st.line_chart(np.random.normal(50, 10, 24), color="#0071E3")
+        st.info("Visualización optimizada para campo.")
 
 if __name__ == "__main__":
     main()
