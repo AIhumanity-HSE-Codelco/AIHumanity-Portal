@@ -5,153 +5,127 @@ import plotly.graph_objects as go
 from datetime import datetime
 import time
 
-# 1. CONFIGURACIÓN DE INTERFAZ CUPERTINO (WHITE/SOFT)
-st.set_page_config(
-    page_title="AIH Master | El Teniente HSE",
-    page_icon="🍏",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+# 1. CONFIGURACIÓN CUPERTINO
+st.set_page_config(page_title="AIH Master | El Teniente", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. MOTOR DE ESTILOS CSS (CUSTOM UI)
+# 2. MOTOR DE ESTILOS CSS
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;600&display=swap');
-    
     html, body, [class*="css"] { font-family: 'SF Pro Display', sans-serif; background-color: #F5F5F7; color: #1D1D1F; }
     .stApp { background-color: #F5F5F7; }
-    
-    /* Tarjetas Modulares */
-    .mod-card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 24px;
-        padding: 22px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.03);
-        border: 1px solid rgba(255,255,255,0.6);
-        margin-bottom: 20px;
-    }
-    
-    /* Barra de Progreso Meta Cero */
+    .mod-card { background: rgba(255, 255, 255, 0.9); border-radius: 24px; padding: 22px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.6); margin-bottom: 20px; transition: all 0.3s; }
     .progress-bg { width: 100%; background-color: #E5E5EA; border-radius: 10px; height: 14px; margin: 10px 0; }
-    .progress-fill { height: 14px; border-radius: 10px; background: linear-gradient(90deg, #30D158, #34C759); transition: width 1s ease-in-out; }
-    
-    /* Botonera Digital */
-    .stButton>button {
-        width: 100%;
-        border-radius: 14px;
-        background: #F2F2F7;
-        color: #5E5CE6;
-        border: 1px solid #D1D1D6;
-        padding: 12px;
-        font-weight: 600;
-        transition: all 0.2s;
-    }
-    .stButton>button:hover { background: #5E5CE6; color: white; border: none; transform: translateY(-2px); }
+    .progress-fill { height: 14px; border-radius: 10px; transition: width 0.5s ease-in-out; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. MOTOR CENTRAL DE ÍNDICE DE RIESGO (AIH-CORE ENGINE)
-def get_live_metrics():
-    # Simulación de sensores Adeepminers
-    mp10 = 38.5 + np.random.uniform(-4, 6)
-    viento = 22 + np.random.uniform(-5, 5)
-    estabilidad = 98.4 - (mp10 * 0.04)
-    gases = 15 + np.random.uniform(0, 10)
+# 3. MEMORIA DE SENSORES (SESSION STATE PARA FLUIDEZ)
+# Esto evita que los datos salten a lo loco y crea un efecto de "respiración" natural
+if 'mp10' not in st.session_state:
+    st.session_state.mp10 = 38.0
+    st.session_state.wind = 22.0
+    st.session_state.stab = 98.0
+    st.session_state.gas = 15.0
+
+def update_sensors():
+    # Caminata aleatoria (Random Walk) simulando telemetría real
+    st.session_state.mp10 = max(0, st.session_state.mp10 + np.random.uniform(-1.5, 1.8))
+    st.session_state.wind = max(0, st.session_state.wind + np.random.uniform(-1.0, 1.2))
+    st.session_state.stab = min(100, max(0, st.session_state.stab + np.random.uniform(-0.1, 0.1)))
+    st.session_state.gas = max(0, st.session_state.gas + np.random.uniform(-0.5, 0.6))
     
-    # Cálculo de Riesgo Acumulado (Pesos: Geo 40%, Polvo 30%, Gases 20%, Viento 10%)
-    risk_index = (mp10*0.3) + ((100-estabilidad)*2.5) + (gases*0.2) + (viento*0.1)
-    return round(mp10, 1), round(viento, 1), round(estabilidad, 1), round(gases, 1), round(risk_index, 1)
+    # Motor de Riesgo
+    risk = (st.session_state.mp10*0.3) + ((100-st.session_state.stab)*2.5) + (st.session_state.gas*0.2) + (st.session_state.wind*0.1)
+    return min(100, risk)
 
-mp10, wind, stab, gas, risk = get_live_metrics()
-meta_zero_val = 100 - (risk * 0.4)
+# 4. STATUS BAR & CONTROL DE TELEMETRÍA
+col_top1, col_top2 = st.columns([3, 1])
+with col_top1:
+    st.markdown(f"""
+        <div style="padding: 10px 20px; background: white; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+            <span style="font-weight:600; color:#5E5CE6;">📍 EL TENIENTE SUBTERRÁNEA</span> | 
+            <span style="color:#8E8E93;">{datetime.now().strftime('%H:%M:%S')} CLT</span>
+        </div>
+        """, unsafe_allow_html=True)
+with col_top2:
+    # EL BOTÓN MÁGICO QUE DA VIDA AL DASHBOARD
+    live_feed = st.toggle("📡 Telemetría en Vivo (Auto-Sync)", value=True)
 
-# 4. MODULO 1 & 2: STATUS BAR & REGIONAL TIME
-st.markdown(f"""
-    <div style="display: flex; justify-content: space-between; padding: 10px 20px; background: white; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
-        <span style="font-weight:600; color:#5E5CE6;">📍 EL TENIENTE SUBTERRÁNEA</span>
-        <span style="color:#8E8E93;">{datetime.now().strftime('%d/%m/%Y | %H:%M:%S')} CLT</span>
-        <span style="color:#30D158; font-weight:600;">● SISTEMA SINCRONIZADO</span>
-    </div>
-    """, unsafe_allow_html=True)
+# Actualizar variables si el feed está activo
+if live_feed:
+    risk_index = update_sensors()
+else:
+    risk_index = (st.session_state.mp10*0.3) + ((100-st.session_state.stab)*2.5) + (st.session_state.gas*0.2) + (st.session_state.wind*0.1)
+
+meta_zero_val = max(0, 100 - (risk_index * 0.4))
 
 # 5. DASHBOARD LAYOUT
 col_stats, col_radar, col_alerts = st.columns([1, 2, 1])
 
-# --- COLUMNA IZQUIERDA: META CERO & VIENTO ---
+# --- MÓDULO: META CERO & SENSORES ---
 with col_stats:
+    # Color dinámico para la barra
+    bar_color = "#30D158" if meta_zero_val > 80 else "#FF9500" if meta_zero_val > 50 else "#FF3B30"
     st.markdown(f"""
         <div class="mod-card">
-            <p style="color:#8E8E93; font-size:0.8rem; margin:0;">META CERO OBJETIVO</p>
-            <h2 style="color:#30D158; margin:0;">{round(meta_zero_val,1)}%</h2>
-            <div class="progress-bg"><div class="progress-fill" style="width: {meta_zero_val}%;"></div></div>
-            <p style="font-size:0.75rem; color:#1D1D1F;">Días sin incidentes: <b>442</b></p>
+            <p style="color:#8E8E93; font-size:0.8rem; margin:0; font-weight:600;">OBJETIVO META CERO</p>
+            <h2 style="color:{bar_color}; margin:0;">{round(meta_zero_val,1)}%</h2>
+            <div class="progress-bg"><div class="progress-fill" style="width: {meta_zero_val}%; background: {bar_color};"></div></div>
         </div>
         """, unsafe_allow_html=True)
     
     st.markdown(f"""
         <div class="mod-card">
-            <p style="color:#8E8E93; font-size:0.8rem; margin:0;">VIENTO Y DISPERSIÓN</p>
-            <h3 style="margin:0; color:#1D1D1F;">{wind} <small>km/h</small></h3>
-            <p style="color:#5E5CE6; font-size:0.8rem;">Vector: NE | Dispersión Baja</p>
+            <p style="color:#8E8E93; font-size:0.8rem; margin:0; font-weight:600;">SENSOR MP10 (POLVO)</p>
+            <h3 style="margin:0; color:#1D1D1F;">{round(st.session_state.mp10, 1)} <small>µg/m³</small></h3>
         </div>
         """, unsafe_allow_html=True)
 
-# --- COLUMNA CENTRAL: RADAR HSE-STOP-WORK ---
+# --- MÓDULO CENTRAL: RADAR DINÁMICO ---
 with col_radar:
     st.markdown('<div class="mod-card" style="text-align:center;">', unsafe_allow_html=True)
-    st.markdown("<p style='font-weight:600;'>ÍNDICE DE RIESGO GLOBAL ACUMULATIVO</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-weight:600; color:#8E8E93;'>ÍNDICE DE RIESGO GLOBAL (HSE-STOP-WORK)</p>", unsafe_allow_html=True)
     
-    # Plotly Radar Chart
-    categories = ['Polvo MP10', 'Geomecánica', 'Gases CO/NOx', 'Viento/Disp.', 'Tránsito']
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(
-        r=[mp10, 100-stab, gas, wind, 25],
-        theta=categories,
+        r=[st.session_state.mp10, 100-st.session_state.stab, st.session_state.gas, st.session_state.wind, 25],
+        theta=['Polvo MP10', 'Geomecánica (Raveling)', 'Gases CO/NOx', 'Viento/Disp.', 'Tránsito'],
         fill='toself',
-        fillcolor='rgba(94, 92, 230, 0.2)',
+        fillcolor='rgba(94, 92, 230, 0.3)',
         line=dict(color='#5E5CE6', width=3)
     ))
     fig.update_layout(
         polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
         showlegend=False,
-        margin=dict(t=30, b=30, l=40, r=40),
-        paper_bgcolor='rgba(0,0,0,0)'
+        margin=dict(t=20, b=20, l=40, r=40),
+        paper_bgcolor='rgba(0,0,0,0)',
+        height=350
     )
     st.plotly_chart(fig, use_container_width=True)
     
-    # Dinámica de Color de Riesgo
-    status_color = "#30D158" if risk < 40 else "#FF9500" if risk < 70 else "#FF3B30"
-    st.markdown(f"<h1 style='color:{status_color}; margin:0;'>{risk} IRG</h1>", unsafe_allow_html=True)
+    # Alerta visual central
+    status_color = "#30D158" if risk_index < 40 else "#FF9500" if risk_index < 70 else "#FF3B30"
+    st.markdown(f"<h2 style='color:{status_color}; margin:0;'>IRG: {round(risk_index, 1)}</h2>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- COLUMNA DERECHA: ALERTAS & REPORTES ---
+# --- MÓDULO: MAPA Y GEOLOCALIZACIÓN ---
 with col_alerts:
     st.markdown('<div class="mod-card">', unsafe_allow_html=True)
-    st.markdown("<p style='font-weight:600;'>REPORTES HSE DIGITALES</p>", unsafe_allow_html=True)
-    st.button("📥 Descargar Reporte Turno")
-    st.button("📉 Ver KPIs Históricos")
-    st.divider()
-    st.error("⚠️ ALERTA: Ventilación G-4")
-    st.warning("☁️ CLIMA: Rachas 40km/h")
+    st.markdown("<p style='font-weight:600; color:#8E8E93;'>ADEEPMINERS TRACKING</p>", unsafe_allow_html=True)
+    # Mapa que cambia ligeramente simulando movimiento
+    lat_jitter = np.random.uniform(-0.002, 0.002, 5)
+    lon_jitter = np.random.uniform(-0.002, 0.002, 5)
+    map_df = pd.DataFrame({
+        'lat': [-34.08] * 5 + lat_jitter,
+        'lon': [-70.46] * 5 + lon_jitter
+    })
+    st.map(map_df, zoom=12, height=200)
+    st.button("🆘 STOP-WORK ALERT", type="primary", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 6. MODULOS INFERIORES: GEOLOCALIZACIÓN & BOTONERA
-st.markdown("### 📍 Geolocalización Adeepminers (Red Intra-Mina)")
-m_map, m_btns = st.columns([3, 1])
-
-with m_map:
-    # Simulación de puntos Adeepminers en El Teniente
-    map_df = pd.DataFrame(
-        np.random.randn(8, 2) / [180, 180] + [-34.05, -70.45],
-        columns=['lat', 'lon']
-    )
-    st.map(map_df, zoom=13)
-
-with m_btns:
-    st.write("### Panel Digital")
-    st.button("🔄 Sync Nodos")
-    st.button("📡 Calibrar GPS")
-    st.button("🆘 STOP-WORK", type="primary")
-
-st.markdown("---")
-st.caption("AIHumanity Core v4.0 | El Teniente Subterránea | Software Robustness: High Availability")
+# 6. BUCLE DE ACTUALIZACIÓN (EL MOTOR DE VIDA)
+# Si el toggle está activo, la app espera 1.5 segundos y se recarga sola.
+if live_feed:
+    time.sleep(1.5)
+    st.rerun()
