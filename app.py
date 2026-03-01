@@ -4,114 +4,89 @@ import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
 
-# --- 1. CONFIGURACIÓN CORE Y BLINDAJE ---
-st.set_page_config(page_title="AIH MASTER | V21.0", layout="wide", initial_sidebar_state="expanded")
+# --- 1. CONFIGURACIÓN CORE Y SESIÓN ---
+st.set_page_config(page_title="AIH MASTER | V23.0 MATRIX", layout="wide", initial_sidebar_state="expanded")
 
-def apply_style():
+def apply_industrial_dark_style():
     st.markdown("""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap');
-        .stApp { background-color: #F5F5F7; color: #1D1D1F; font-family: 'SF Pro Display', sans-serif; }
-        div[data-testid="stMetric"] { background-color: #FFFFFF; border: 1px solid #D2D2D7; padding: 20px; border-radius: 14px; }
-        .module-header { color: #0071E3; font-weight: 600; border-bottom: 2px solid #0071E3; margin-bottom: 20px; }
+        .stApp { background-color: #0A0A0A; color: #E5E5E5; font-family: 'SF Pro Display', sans-serif; }
+        [data-testid="stSidebar"] { background-color: #151515 !important; border-right: 1px solid #333; }
+        .stMetric { background-color: #1A1A1A; border: 1px solid #333; padding: 15px; border-radius: 10px; }
+        .category-box { padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #0071E3; background: #1A1A1A; }
+        /* Mejora de legibilidad en inputs */
+        input, select, .stSelectbox { background-color: #222 !important; color: white !important; }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 2. DEFINICIÓN DE LOS 13 PILARES (FUNCIONES) ---
-
-def mod_01():
-    st.markdown("<h2 class='module-header'>01 💎 EL CEREBRO (IRC)</h2>", unsafe_allow_html=True)
-    st.metric("IRC GLOBAL", "46.2%", "Detección Crítica")
-    fig = go.Figure(go.Scatterpolar(r=[40, 30, 25, 60, 20, 30, 15, 45, 10, 70, 35, 20, 10], 
-        theta=['Gas','Bio','Eng','GIS','Sis','PHM','Polvo','Hum','Clima','Beh','Ruido','Main','BI'], fill='toself'))
-    st.plotly_chart(fig, use_container_width=True)
-    
-
-def mod_02():
-    st.markdown("<h2 class='module-header'>02 💨 GASES CRÍTICOS (M06)</h2>", unsafe_allow_html=True)
-    st.columns(2)[0].metric("O2", "20.9%", "Nominal")
-    st.columns(2)[1].metric("CO", "12 ppm", "Safe")
-    
-
-def mod_03():
-    st.markdown("<h2 class='module-header'>03 🧬 BIOMETRÍA & FATIGA (M07)</h2>", unsafe_allow_html=True)
-    st.metric("Fatiga Index", "14%", "Bajo")
-    
-
-def mod_04():
-    st.markdown("<h2 class='module-header'>04 ⚡ ENERGÍA & FLOTA (M08)</h2>", unsafe_allow_html=True)
-    st.metric("Eficiencia", "1.1 kWh/Ton", "Óptimo")
-
-def mod_05():
-    st.markdown("<h2 class='module-header'>05 🗺️ GIS & TALUDES (M09)</h2>", unsafe_allow_html=True)
-    st.metric("FoS", "1.45", "Estable")
-    
-
-def mod_06():
-    st.markdown("<h2 class='module-header'>06 🌪️ ADMS & POLVO</h2>", unsafe_allow_html=True)
-    st.metric("MP10", "38 µg/m³", "Safe")
-    
-
-def mod_07():
-    st.markdown("<h2 class='module-header'>07 🌍 SISMO (LIVE)</h2>", unsafe_allow_html=True)
-    st.info("Sincronización USGS Activa.")
-
-def mod_08():
-    st.markdown("<h2 class='module-header'>08 ⚙️ ACTIVOS (PHM)</h2>", unsafe_allow_html=True)
-    st.line_chart(np.random.randn(20))
-
-def mod_09():
-    st.markdown("<h2 class='module-header'>09 🚨 EMERGENCIAS</h2>", unsafe_allow_html=True)
-    st.error("Protocolos de Evacuación Cargados.")
-
-def mod_10():
-    st.markdown("<h2 class='module-header'>10 👥 COMPORTAMIENTO PREDICTIVO</h2>", unsafe_allow_html=True)
-    st.metric("Actitud Segura", "98%", "Alta")
-    
-
-def mod_11():
-    st.markdown("<h2 class='module-header'>11 🔊 HIGIENE ACÚSTICA</h2>", unsafe_allow_html=True)
-    st.metric("Ruido Leq", "82 dB(A)", "Bajo Límite")
-    
-
-def mod_12():
-    st.markdown("<h2 class='module-header'>12 🛠️ MANTENIMIENTO (CMMS)</h2>", unsafe_allow_html=True)
-    st.write("Órdenes de Trabajo Generadas: 2")
-
-def mod_13():
-    st.markdown("<h2 class='module-header'>13 📊 REPORTABILIDAD (BI)</h2>", unsafe_allow_html=True)
-    st.button("Generar Reporte Consolidado V21.0")
-
-# --- 3. DICCIONARIO DE ENRUTAMIENTO (EL MAPA MAESTRO) ---
-MAPA_MODULOS = {
-    "01 💎 EL CEREBRO": mod_01,
-    "02 💨 GASES (M06)": mod_02,
-    "03 🧬 BIOMETRÍA (M07)": mod_03,
-    "04 ⚡ ENERGÍA (M08)": mod_04,
-    "05 🗺️ GIS/TALUDES (M09)": mod_05,
-    "06 🌪️ ADMS/POLVO": mod_06,
-    "07 🌍 SISMO": mod_07,
-    "08 ⚙️ ACTIVOS (PHM)": mod_08,
-    "09 🚨 EMERGENCIAS": mod_09,
-    "10 👥 COMPORTAMIENTO": mod_10,
-    "11 🔊 ACÚSTICA": mod_11,
-    "12 🛠️ MANTENIMIENTO": mod_12,
-    "13 📊 REPORTES": mod_13
+# --- 2. MAPA ESTRUCTURAL DE LOS 25 MÓDULOS ---
+ESTRUCTURA_BÓVEDA = {
+    "💎 ESTRATÉGICO": ["01 EL CEREBRO (IRC)", "13 REPORTES BI", "19 AUDITORÍA", "25 MESH STATUS"],
+    "💨 AMBIENTAL": ["02 GASES (M06)", "06 ADMS/POLVO", "07 SISMO", "11 ACÚSTICA", "21 VENTILACIÓN 3D"],
+    "🧬 HUMANO": ["03 BIOMETRÍA", "10 BEHAVIOR", "14 OCULOMETRÍA", "15 CARGA COGNITIVA", "16 ESTRÉS TÉRMICO"],
+    "⚙️ OPERATIVO": ["04 ENERGÍA", "05 GIS/TALUDES", "08 ACTIVOS", "12 MANTENIMIENTO", "22 COLISIÓN H-M", "23 STOCKPILES", "24 CALIDAD ENERGÍA"],
+    "🚨 CRÍTICO": ["09 EMERGENCIAS", "17 INCIDENTES", "18 CAUSA RAÍZ", "20 NOTIFICACIONES"]
 }
 
-# --- 4. EJECUCIÓN MAESTRA ---
-def main():
-    apply_style()
-    with st.sidebar:
-        st.markdown("### **AIH MASTER CONTROL**")
-        st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=50)
-        # Selección Forzada y Blindada
-        seleccion = st.selectbox("LISTA DE 13 MÓDULOS:", list(MAPA_MODULOS.keys()))
-        st.divider()
-        st.caption(f"V21.0 | Bóveda Recuperada | {datetime.now().strftime('%H:%M')}")
+# --- 3. FUNCIONES DE RENDERIZADO (EJEMPLOS DE CAPA 17-25) ---
 
-    # Ejecución dinámica: Llama a la función según la llave del diccionario
-    MAPA_MODULOS[seleccion]()
+def render_m17_incidentes():
+    st.markdown("## 📝 M17: Registro Flash de Incidentes")
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        st.write("### Captura de Evento")
+        tipo = st.selectbox("Clasificación", ["Cuasi-accidente", "Acto Inseguro", "Falla Mecánica"])
+        obs = st.text_area("Descripción del hallazgo")
+        if st.button("🚨 SELLAR INCIDENTE"):
+            st.success("Registrado en Bóveda con ID: " + datetime.now().strftime("%Y%m%d%H%M"))
+    with c2:
+        st.write("### Historial de Turno")
+        st.dataframe(pd.DataFrame({"Hora": ["14:20", "15:45"], "Evento": ["Derrame Aceite", "Ingreso zona restringida"]}))
+
+def render_m21_ventilacion():
+    st.markdown("## 🌪️ M21: Gemelo Digital de Ventilación (VOD)")
+    
+    col_v1, col_v2 = st.columns(2)
+    col_v1.metric("Flujo de Aire Total", "450k cfm", "+5k")
+    col_v2.metric("Eficiencia Ventiladores", "88%", "Estable")
+    st.warning("⚠️ Simulación: Si falla el Ventilador Sur, el nivel 4 quedará sin O2 en 12 minutos.")
+
+def render_m14_oculometria():
+    st.markdown("## 👁️ M14: Oculometría y Vigilancia")
+    
+    st.metric("Índice de Parpadeo", "12/min", "Riesgo de Microsueño: BAJO")
+    st.info("Algoritmo TensorFlow analizando puntos faciales en tiempo real.")
+
+# --- 4. MOTOR DE NAVEGACIÓN CATEGORIZADA ---
+def main():
+    apply_industrial_dark_style()
+    
+    with st.sidebar:
+        st.markdown("<h2 style='color:#0071E3;'>AIH MASTER V23</h2>", unsafe_allow_html=True)
+        st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=60)
+        
+        st.markdown("---")
+        # PASO 1: Seleccionar Dominio
+        dominio = st.selectbox("DOMINIO DE RIESGO:", list(ESTRUCTURA_BÓVEDA.keys()))
+        
+        # PASO 2: Seleccionar Módulo dentro del Dominio
+        modulo = st.radio("MÓDULOS EN " + dominio + ":", ESTRUCTURA_BÓVEDA[dominio])
+        
+        st.divider()
+        st.caption(f"MODO: GOBERNANZA ACTIVA | {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+
+    # --- ROUTER DE RENDERIZADO ---
+    if "01" in modulo:
+        st.markdown("## 💎 01: EL CEREBRO (IRC)")
+        
+        st.metric("IRC GLOBAL", "42.1%", "+1.5%")
+    elif "17" in modulo: render_m17_incidentes()
+    elif "21" in modulo: render_m21_ventilacion()
+    elif "14" in modulo: render_m14_oculometria()
+    else:
+        st.markdown(f"## {modulo}")
+        st.info(f"Visualización de datos en tiempo real para {modulo}. Protocolos TRL-4 activos.")
+        st.metric("Estado del Nodo", "Sincronizado", "99.8% Uptime")
 
 if __name__ == "__main__":
     main()
