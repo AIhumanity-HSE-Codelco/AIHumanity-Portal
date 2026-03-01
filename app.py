@@ -67,4 +67,32 @@ def main():
     
     with st.sidebar:
         st.markdown("### **AIH MASTER CONTROL**")
-        st.image("https://cdn-icons-png.
+        st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=50)
+        
+        # Selección Enumerada para Blindaje de Navegación
+        modulo_sel = st.selectbox("ENUMERACIÓN DE MÓDULOS:", [
+            "01 💎 EL CEREBRO",
+            "02 💨 GASES (M06)",
+            "03 🧬 BIOMETRÍA (M07)",
+            "04 ⚡ ENERGÍA (M08)",
+            "05 🗺️ GIS/TALUDES (M09)",
+            "06 🌪️ ADMS/POLVO",
+            "07 🌍 SISMO",
+            "08 ⚙️ ACTIVOS (PHM)",
+            "09 🚨 EMERGENCIAS"
+        ])
+        st.divider()
+        st.caption(f"V17.2 | ESTADO: BLINDADO | {datetime.now().strftime('%H:%M')}")
+
+    # Router Blindado
+    if modulo_sel == "01 💎 EL CEREBRO": render_cerebro_v17()
+    elif modulo_sel == "02 💨 GASES (M06)": render_m06_gases()
+    elif modulo_sel == "03 🧬 BIOMETRÍA (M07)": render_m07_bio()
+    elif modulo_sel == "04 ⚡ ENERGÍA (M08)": render_m08_energia()
+    elif modulo_sel == "05 🗺️ GIS/TALUDES (M09)": render_m09_gis()
+    else:
+        st.markdown(f"<h2 class='module-header'>{modulo_sel}</h2>", unsafe_allow_html=True)
+        st.info(f"Módulo {modulo_sel} en espera de datos de campo (TRL-4).")
+
+if __name__ == "__main__":
+    main()
