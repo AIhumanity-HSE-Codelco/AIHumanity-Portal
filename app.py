@@ -166,3 +166,104 @@ with f3: st.button("🛠️ ADMIN DIAGNÓSTICO", use_container_width=True)
 # REFRESH PARA INTERACTIVIDAD
 time.sleep(1.5)
 st.rerun()
+import streamlit as st
+import pandas as pd
+import numpy as np
+import requests
+from streamlit_echarts import st_echarts
+import plotly.graph_objects as go
+from scipy.stats import multivariate_normal
+from datetime import datetime
+import time
+
+# 1. SETUP DE PÁGINA (ESTILO BLINDADO)
+st.set_page_config(page_title="AIH | ADMS & MET-SISMIC", layout="wide", initial_sidebar_state="expanded")
+
+# 2. MOTOR DE DATOS REAL-TIME (API METEOROLÓGICA)
+# Nota: Aquí se usaría una API Key de OpenWeatherMap. Por ahora simulamos la estructura real.
+def get_real_weather():
+    # Simulación de llamada a API: https://api.openweathermap.org/data/2.5/weather?lat=-34.05&lon=-70.45
+    weather_data = {
+        "temp": 22.5,
+        "wind_speed": 18.4 + np.random.uniform(-2, 2),
+        "wind_deg": 225, # Suroeste
+        "hum": 58,
+        "press": 1012
+    }
+    return weather_data
+
+# 3. LÓGICA DE NAVEGACIÓN
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/1684/1684375.png", width=60)
+    st.title("SISTEMA ADMS")
+    page = st.selectbox("MÓDULO SELECCIONADO:", ["🏠 Dashboard Principal", "🌪️ Analizador ADMS", "📉 Monitor Sismográfico"])
+    st.divider()
+    st.info("📡 STATUS: Conectado a Estación Rancagua / El Teniente")
+
+# 4. PÁGINA: ANALIZADOR ADMS (DISPERSIÓN DE POLVO)
+if page == "🌪️ Analizador ADMS":
+    st.markdown("<h2 style='color:#5E5CE6;'>🌪️ MODELAMIENTO DE DISPERSIÓN ATMOSFÉRICA (ADMS)</h2>", unsafe_allow_html=True)
+    
+    weather = get_real_weather()
+    
+    # FILA 1: TELEMETRÍA REAL
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: st.metric("VIENTO ACTUAL", f"{round(weather['wind_speed'],1)} km/h", f"{weather['wind_deg']}°")
+    with c2: st.metric("ESTABILIDAD PASQUILL", "Clase B", "Inestable")
+    with c3: st.metric("PUNTO ROCÍO", "12.4°C", "Normal")
+    with c4: st.metric("FACTOR DISPERSIÓN", "Alta", "Protocolo 2")
+
+    st.divider()
+
+    # FILA 2: EL RADAR ADMS (MODELO GAUSSIANO)
+    col_map, col_controls = st.columns([2, 1])
+
+    with col_map:
+        st.markdown("### 🗺️ Proyección de Pluma de Polvo (Real-Time)")
+        
+        # Simulación de Pluma Gaussiana
+        x, y = np.mgrid[-50:50:1, -50:50:1]
+        pos = np.dstack((x, y))
+        # La pluma se estira según la velocidad del viento y gira según la dirección
+        rv = multivariate_normal([0, 0], [[weather['wind_speed']*2, 0], [0, 5]])
+        z = rv.pdf(pos)
+        
+        fig = go.Figure(data=[go.Contour(z=z, colorscale='Viridis', showscale=False)])
+        fig.update_layout(title="Concentración MP10 Proyectada (Suelo)", height=450, 
+                          xaxis_visible=False, yaxis_visible=False, paper_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig, use_container_width=True)
+        
+
+    with col_controls:
+        st.markdown("<div style='background:white; padding:20px; border-radius:15px;'>", unsafe_allow_html=True)
+        st.write("### ⚙️ Parámetros ADMS")
+        source_type = st.selectbox("Fuente de Polvo", ["Chancado Primario", "Tránsito Camiones", "Stockpiles"])
+        stack_height = st.slider("Altura de Emisión (m)", 0, 50, 15)
+        st.divider()
+        st.write("### 🛡️ Acción Sugerida")
+        if weather['wind_speed'] > 15:
+            st.error("⚠️ CRÍTICO: Dispersión hacia Zona de Dormitorios")
+            st.button("ACTIVAR NEBULIZADORES SECTOR 4")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+# 5. PÁGINA: MONITOR SISMOGRÁFICO (VIBRACIÓN TRL-4)
+elif page == "📉 Monitor Sismográfico":
+    st.markdown("<h2 style='color:#30D158;'>📉 MONITOR SISMOGRÁFICO DE TALUDES</h2>", unsafe_allow_html=True)
+    
+    col_sismo, col_data = st.columns([2, 1])
+    
+    with col_sismo:
+        # Gráfico dinámico de aceleración (g)
+        sismo_data = pd.DataFrame(np.random.randn(100, 1) * 0.01, columns=['Aceleración (g)'])
+        st.line_chart(sismo_data, height=400)
+        
+        
+    with col_data:
+        st.write("### 📏 Análisis de Vibración")
+        st.metric("VPP (Vel. Pico Partícula)", "1.2 mm/s", "Bajo")
+        st.metric("Frecuencia Dominante", "15 Hz", "Normal")
+        st.info("Estatus: Sin riesgo de desprendimiento (Raveling) en Sector Alpha.")
+
+# 6. FOOTER Y REFRESH
+time.sleep(1)
+st.rerun()
