@@ -5,97 +5,116 @@ import plotly.graph_objects as go
 from datetime import datetime
 import time
 
-# 1. SETUP DE ALTA DENSIDAD - DARK MODE INDUSTRIAL
-st.set_page_config(page_title="AIH | THE CORE", layout="wide", initial_sidebar_state="collapsed")
+# 1. SETUP PROFESIONAL (RESPONSIVO Y ESTABLE)
+st.set_page_config(page_title="AIH | THE CORE V10.1", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS PERSONALIZADO (ALTO CONTRASTE - FONDO OSCURO)
+# 2. CSS REFINADO (ESTILO DARK-INDUSTRIAL SIN PALPITACIONES)
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-    html, body, [class*="css"] { font-family: 'JetBrains Mono', monospace; background-color: #0E1117; color: #E0E0E0; }
-    .stApp { background-color: #0E1117; }
-    .metric-container { background: #161B22; border: 1px solid #30363D; padding: 15px; border-radius: 12px; }
-    .risk-high { color: #FF3B30; font-weight: 800; animation: blinker 1.5s linear infinite; }
-    @keyframes blinker { 50% { opacity: 0; } }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    
+    /* Fondo Gris Carbón Industrial */
+    .stApp { background-color: #1A1C21; color: #E0E0E0; font-family: 'Inter', sans-serif; }
+    
+    /* Tarjetas de Datos Blindadas */
+    .metric-card {
+        background: #25282F;
+        padding: 20px;
+        border-radius: 15px;
+        border: 1px solid #3A3F47;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        text-align: center;
+    }
+    
+    /* Tipografía para Laptops y PC */
+    .value-main { font-size: 2.2rem; font-weight: 800; margin: 0; }
+    .label-sub { font-size: 0.8rem; color: #8E949E; text-transform: uppercase; letter-spacing: 1px; }
+    
+    /* Estatus de Riesgo Sin Parpadeo */
+    .status-safe { border-left: 5px solid #30D158; }
+    .status-warn { border-left: 5px solid #FF9500; }
+    .status-crit { border-left: 5px solid #FF3B30; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. MOTOR DE CORRELACIÓN (EL CEREBRO)
-def calcular_riesgo_compuesto(mp10, viento, personal_count):
-    # Lógica de Inferencia: Correlaciona ambiente + exposición humana
-    base_risk = (mp10 * 0.4) + (viento * 0.2) + (personal_count * 5)
-    return min(base_risk, 100)
+# 3. MOTOR DE GOBERNANZA (DATOS SUAVIZADOS)
+if 'buffer_irc' not in st.session_state: st.session_state.buffer_irc = [50.0]
 
-# 4. NAVEGACIÓN
+def get_smoothed_irc():
+    # Simulamos entrada de sensores
+    raw_val = 40 + np.sin(time.time() * 0.1) * 20 + np.random.normal(0, 2)
+    st.session_state.buffer_irc.append(raw_val)
+    if len(st.session_state.buffer_irc) > 10: st.session_state.buffer_irc.pop(0)
+    return np.mean(st.session_state.buffer_irc)
+
+# 4. INTERFAZ DE ALTA DENSIDAD
 with st.sidebar:
     st.title("🧠 AIH CORE")
-    modulo = st.radio("SISTEMA:", ["💎 CEREBRO DE DECISIONES", "🏠 Control Tower", "🌍 Geofísica", "🌪️ ADMS"])
+    modulo = st.radio("SELECCIONAR VISTA:", ["💎 MOTOR DE DECISIONES", "🏠 DASHBOARD", "🌍 GEOFÍSICA"])
 
-# --- MÓDULO MAESTRO: CEREBRO DE DECISIONES ---
-if modulo == "💎 CEREBRO DE DECISIONES":
-    st.markdown("<h2 style='text-align: center; color:#5E5CE6;'>🧠 MOTOR DE INFERENCIA DE RIESGO PROGRESIVO</h2>", unsafe_allow_html=True)
+# --- VISTA: MOTOR DE DECISIONES ---
+if modulo == "💎 MOTOR DE DECISIONES":
+    current_irc = get_smoothed_irc()
     
-    # DATOS DE CAMPO EN TIEMPO REAL (SIMULACIÓN DE NODOS)
-    mp10_val = 45 + np.random.uniform(-5, 5)
-    viento_val = 22 + np.random.uniform(-2, 2)
-    personal_val = 14
-    
-    irc = calcular_riesgo_compuesto(mp10_val, viento_val, personal_val)
+    h1, h2 = st.columns([3, 1])
+    with h1:
+        st.markdown("<h2 style='margin:0;'>🧠 GOBERNANZA DE RIESGO PROGRESIVO</h2>", unsafe_allow_html=True)
+        st.caption(f"Nodo Maestro: ESP32-GATEWAY-01 | Sincronización: {datetime.now().strftime('%H:%M:%S')}")
+    with h2:
+        status_label = "SEGURO" if current_irc < 40 else "PRECAUCIÓN" if current_irc < 70 else "CRÍTICO"
+        status_class = "status-safe" if current_irc < 40 else "status-warn" if current_irc < 70 else "status-crit"
+        st.markdown(f"<div class='metric-card {status_class}'><p class='label-sub'>ESTADO HSE</p><p class='value-main'>{status_label}</p></div>", unsafe_allow_html=True)
 
-    # FILA 1: INDICADORES COMPUESTOS (GAUGES)
-    col1, col2, col3 = st.columns(3)
+    st.write("")
+
+    # FILA 1: INDICADORES COMPUESTOS
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.markdown(f"<div class='metric-card'><p class='label-sub'>Índice IRC</p><p class='value-main' style='color:#5E5CE6;'>{round(current_irc,1)}%</p></div>", unsafe_allow_html=True)
+    with c2:
+        st.markdown(f"<div class='metric-card'><p class='label-sub'>MP10 Activo</p><p class='value-main'>42.1</p></div>", unsafe_allow_html=True)
+    with c3:
+        st.markdown(f"<div class='metric-card'><p class='label-sub'>Nodos Online</p><p class='value-main'>12/12</p></div>", unsafe_allow_html=True)
+    with c4:
+        st.markdown(f"<div class='metric-card'><p class='label-sub'>Personal</p><p class='value-main'>14</p></div>", unsafe_allow_html=True)
+
+    st.write("")
+
+    # FILA 2: ANÁLISIS DE CORRELACIÓN Y RED DE NODOS
+    col_chart, col_net = st.columns([2, 1])
     
-    with col1:
-        fig_irc = go.Figure(go.Indicator(
-            mode = "gauge+number",
-            value = irc,
-            title = {'text': "IRC (Índice Riesgo Combinado)"},
-            gauge = {'axis': {'range': [0, 100]}, 'bar': {'color': "#5E5CE6"},
-                     'steps': [{'range': [0, 40], 'color': "green"}, {'range': [40, 70], 'color': "yellow"}, {'range': [70, 100], 'color': "red"}]}
+    with col_chart:
+        st.markdown("### 📈 Correlación Cruzada de Señales")
+        # Gráfico de Riesgo Progresivo
+        chart_data = pd.DataFrame(np.random.normal(current_irc, 2, size=(20, 1)), columns=['Probabilidad de Incidente'])
+        st.area_chart(chart_data, height=250)
+        
+
+    with col_net:
+        st.markdown("### 🕸️ Red de Trazabilidad")
+        # Visualización de la red de nodos AideepMiners
+        fig_net = go.Figure(go.Scatter(
+            x=[1, 2, 3, 2, 1], y=[1, 2, 1, 0, 0],
+            mode='markers+lines+text',
+            text=['N1', 'N2', 'N3', 'P1', 'P2'],
+            marker=dict(size=[40, 40, 40, 60, 60], color=['#5E5CE6', '#5E5CE6', '#5E5CE6', '#30D158', '#30D158']),
+            textposition="bottom center"
         ))
-        fig_irc.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': "white", 'family': "Arial"}, height=300)
-        st.plotly_chart(fig_irc, use_container_width=True)
+        fig_net.update_layout(showlegend=False, height=250, margin=dict(t=0,b=0,l=0,r=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_visible=False, yaxis_visible=False)
+        st.plotly_chart(fig_net, use_container_width=True)
+        
 
-    with col2:
-        st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
-        st.markdown("<p class='label-micro'>CORRELACIÓN NODO-HUMANO</p>", unsafe_allow_html=True)
-        st.write(f"Nodos Activos: 8/8")
-        st.write(f"Personal en Zona Crítica: {personal_val}")
-        st.write(f"Probabilidad Incidente: {round(irc/1.2, 1)}%")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with col3:
-        st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
-        st.markdown("<p class='label-micro'>ESTADO DE GOBERNANZA</p>", unsafe_allow_html=True)
-        status_color = "#30D158" if irc < 50 else "#FF3B30"
-        st.markdown(f"<h1 style='color:{status_color}; text-align:center;'>{'ESTABLE' if irc < 50 else 'CRÍTICO'}</h1>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # FILA 2: ANÁLISIS DE CORRELACIÓN ESPACIAL
-    st.markdown("### 📊 Correlación de Señales de Campo")
-    chart_data = pd.DataFrame({
-        'Tiempo': pd.date_range(start='now', periods=20, freq='min'),
-        'Polvo (Señal A)': np.random.normal(40, 5, 20),
-        'Vibración (Señal B)': np.random.normal(20, 2, 20),
-        'Riesgo Humano (Señal C)': np.random.normal(60, 10, 20)
-    })
-    st.line_chart(chart_data.set_index('Tiempo'))
-    
-
-    # FILA 3: LOG DE DECISIONES AUTOMÁTICAS
-    st.markdown("### 📜 Log de Decisiones del Cerebro")
-    if irc > 60:
-        st.error(f"⚠️ {datetime.now().strftime('%H:%M:%S')} - ALERTA AUTOMÁTICA: Riesgo Compuesto excede el 60%. Sugerida evacuación Sector Alpha.")
+    # FILA 3: PROTOCOLOS DE ACCIÓN (INTERACTIVO)
+    st.markdown("### 🛡️ Acciones de Gobernanza")
+    if current_irc > 65:
+        st.warning(f"⚠️ El sistema ha detectado una correlación crítica entre Polvo y Personal. Activando protocolo de mitigación.")
+        if st.button("AUTORIZAR EVACUACIÓN"):
+            st.error("EVACUACIÓN INICIADA")
     else:
-        st.success(f"✅ {datetime.now().strftime('%H:%M:%S')} - Sistema operando bajo parámetros de seguridad nominales.")
+        st.success("Sincronización de campo estable. No se requieren intervenciones.")
 
-# --- MÓDULOS BLINDADOS (Llamada simple para no saturar) ---
-else:
-    st.info(f"Módulo {modulo} activo. Cargando base de datos blindada...")
-    st.button("VOLVER AL CEREBRO")
-
-# 5. REFRESH & FOOTER
+# 5. FOOTER Y REFRESH (MÁS LENTO PARA EVITAR ESTRÉS)
 st.divider()
-st.caption(f"AIH MASTER V10.0 | MOTOR DE GOBERNANZA TRL-4 | {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
-time.sleep(2)
+st.caption(f"AIH MASTER V10.1 | Sistema de Gobernanza Estabilizado | {datetime.now().strftime('%H:%M:%S')}")
+time.sleep(3) # Refresco cada 3 segundos para estabilidad visual
 st.rerun()
