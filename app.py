@@ -49,4 +49,48 @@ def render_m12_mantenimiento():
     st.table(ots)
 
 def render_m13_reportes():
-    st.markdown("## <span class='id-badge'>M13</span> 📊 Reportabilidad Legal & BI", unsafe_allow_html=
+    st.markdown("## <span class='id-badge'>M13</span> 📊 Reportabilidad Legal & BI", unsafe_allow_html=True)
+    st.markdown("<div class='module-card'>", unsafe_allow_html=True)
+    st.write("### Generador de Cumplimiento Inmutable")
+    st.selectbox("Seleccione Reporte:", ["HSE Mensual", "Eficiencia Energética", "Mapa de Riesgo IRC"])
+    if st.button("🔒 FIRMAR Y DESCARGAR REPORTE (PDF)"):
+        st.success("Reporte generado con Hash: 0x88F...44A")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# --- 3. REINTEGRACIÓN DEL CEREBRO (IRC) ---
+def render_core_v20():
+    st.markdown("## 🧠 El Cerebro: Gobernanza AIH V20.1", unsafe_allow_html=True)
+    st.metric("IRC GLOBAL", "46.2%", "Detección de Ruido +1.2%")
+    st.divider()
+    # Radar Completo de 13 Factores
+    fig = go.Figure(go.Scatterpolar(
+        r=[40, 30, 25, 60, 20, 30, 15, 45, 10, 70, 35, 20, 10], 
+        theta=['Gases','Bio','Energía','GIS','Sismo','PHM','ADMS','Humano','Clima','Behavior','Ruido','Maint','BI'],
+        fill='toself', line_color='#0071E3', fillcolor='rgba(0, 113, 227, 0.3)'
+    ))
+    fig.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 100])), height=550, margin=dict(t=20,b=20))
+    st.plotly_chart(fig, use_container_width=True)
+
+# --- 4. NAVEGACIÓN Y EJECUCIÓN ---
+def main():
+    apply_blindaje_cupertino()
+    with st.sidebar:
+        st.markdown("### **AIH MASTER CONTROL**")
+        st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=60)
+        
+        sel = st.selectbox("ESTRUCTURA DE MÓDULOS:", [
+            "01 💎 EL CEREBRO (IRC)", "11 🔊 ACÚSTICA", "12 🛠️ MANTENIMIENTO", "13 📊 REPORTES",
+            "02 💨 GASES", "03 🧬 BIOMETRÍA", "04 ⚡ ENERGÍA", "05 🗺️ GIS", "10 👥 BEHAVIOR"
+        ])
+        st.divider()
+        st.caption(f"V20.1 | THE VAULT | {datetime.now().strftime('%H:%M')}")
+
+    # ROUTER BLINDADO
+    if sel == "01 💎 EL CEREBRO (IRC)": render_core_v20()
+    elif sel == "11 🔊 ACÚSTICA": render_m11_acustica()
+    elif sel == "12 🛠️ MANTENIMIENTO": render_m12_mantenimiento()
+    elif sel == "13 📊 REPORTES": render_m13_reportes()
+    else: st.info(f"Módulo {sel} Activo en Segundo Plano.")
+
+if __name__ == "__main__":
+    main()
