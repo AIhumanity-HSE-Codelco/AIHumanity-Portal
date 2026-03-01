@@ -7,90 +7,59 @@ from sklearn.preprocessing import StandardScaler
 from datetime import datetime
 import time
 
-# --- 1. CONFIGURACIÓN DE IDENTIDAD AIH-MASTER ---
-if 'lang' not in st.session_state: st.session_state.lang = "EN"
-if 'auth' not in st.session_state: st.session_state.auth = False
+# --- 1. CONFIGURACIÓN DE PÁGINA (MODO DIRECTO) ---
+st.set_page_config(page_title="AIHumanity | HSE | DIRECT CONTROL", layout="wide")
 
-# Traducciones Reactivas
-L = {
-    "EN": {"title": "AIHumanity | PRO-POWER CONTROL", "icr": "RISK INDEX (ICR)", "dust": "DUST PM10", "wind": "WIND SPEED", "wave": "NEURAL RISK WAVEFORM"},
-    "ES": {"title": "AIHumanity | CONTROL PRO-POWER", "icr": "ÍNDICE DE RIESGO (ICR)", "dust": "POLVO PM10", "wind": "VEL. VIENTO", "wave": "ONDA NEURAL DE RIESGO"}
-}[st.session_state.lang]
-
-st.set_page_config(page_title=L['title'], layout="wide")
-
-# --- 2. DISEÑO HIGH-CONTRAST (CUPERTINO WHITE) ---
+# Diseño High-Contrast White (Brutalismo Industrial)
 st.markdown("""
 <style>
     html, body, [data-testid="stAppViewContainer"] { background-color: #FFFFFF !important; color: #000000 !important; }
-    [data-testid="stSidebar"] { background-color: #F8F9FA !important; border-right: 2px solid #000; }
-    .stMetric { background: #FFF !important; border: 3px solid #000 !important; box-shadow: 8px 8px 0px #000; padding: 15px; }
-    div[data-testid="stMetricValue"] { color: #D35400 !important; font-weight: 800; font-size: 3rem; }
-    .status-bar { background: #000; color: #FFF; padding: 10px; display: flex; justify-content: space-around; font-weight: bold; margin-bottom: 20px; }
+    .stMetric { background: #FFF !important; border: 4px solid #000 !important; box-shadow: 10px 10px 0px #000; padding: 20px; }
+    div[data-testid="stMetricValue"] { color: #D35400 !important; font-weight: 900; font-size: 3.5rem; }
+    .status-bar { background: #000; color: #FFF; padding: 12px; display: flex; justify-content: space-around; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. MOTOR DE INTELIGENCIA (SCIKIT-LEARN) ---
-# Explotamos Isolation Forest para detectar anomalías en los 70k nodos
-class AIH_Predictor:
-    def __init__(self):
-        self.model = IsolationForest(contamination=0.05, random_state=42)
-        self.scaler = StandardScaler()
+# --- 2. BARRA DE ESTADO GLOBAL ---
+st.markdown(f"<div class='status-bar'><span>MODO: ACCESO DIRECTO</span><span>RED: 70,000 NODOS</span><span>TRÁFICO: 22.4 GB/s</span><span>🕒 {datetime.now().strftime('%H:%M:%S')}</span></div>", unsafe_allow_html=True)
 
-    def get_risk_score(self, data):
-        if len(data) < 10: return 100.0
-        scaled_data = self.scaler.fit_transform(data[['val1', 'val2']])
-        self.model.fit(scaled_data)
-        scores = self.model.decision_function(scaled_data[-1:])
-        return max(0, min(100, 100 + (scores[0] * 100)))
-
-# --- 4. PORTAL DE ACCESO (GATEWAY) ---
-if not st.session_state.auth:
-    st.markdown("<h1 style='text-align:center; border: 4px solid #000; padding: 20px;'>GATEWAY UNLOCKED | AIH-MASTER</h1>", unsafe_allow_html=True)
-    role = st.selectbox("SELECT ROLE", ["Operator", "Administrator"])
-    pwd = st.text_input("AUTHORIZATION KEY", type="password")
-    if st.button("EXECUTE ACCESS"):
-        if (role == "Operator" and pwd == "1234") or (role == "Administrator" and pwd == "Admin"):
-            st.session_state.auth = True; st.session_state.role = role; st.rerun()
-    st.stop()
-
-# --- 5. DASHBOARD DINÁMICO (PLOTLY EXPLOTATION) ---
-st.sidebar.radio("🌐 LANGUAGE", ["EN", "ES"], key="lang", index=0 if st.session_state.lang == "EN" else 1)
-
-st.markdown(f"<div class='status-bar'><span>CONNECTIVITY: 100%</span><span>TRAFFIC: 18.5 GB/s</span><span>NODES: 70,000 ACTIVE</span></div>", unsafe_allow_html=True)
-st.title(f"📊 {L['title']}")
-
-# Generación de Datos Sintéticos para Simular los 70k Nodos
+# --- 3. PROCESAMIENTO DE IA (ISOLATION FOREST) ---
 if 'buffer' not in st.session_state:
-    st.session_state.buffer = pd.DataFrame(columns=['val1', 'val2', 'Time'])
+    st.session_state.buffer = pd.DataFrame(columns=['temp', 'dust', 'Time'])
 
-new_data = {'val1': np.random.normal(20, 2), 'val2': np.random.normal(150, 15), 'Time': datetime.now().strftime('%H:%M:%S')}
-st.session_state.buffer = pd.concat([st.session_state.buffer, pd.DataFrame([new_data])]).tail(40)
+# Simulación de Ingesta Continua
+new_data = {'temp': 22.0 + np.random.normal(0, 1), 'dust': 145 + np.random.normal(0, 10), 'Time': datetime.now().strftime('%H:%M:%S')}
+st.session_state.buffer = pd.concat([st.session_state.buffer, pd.DataFrame([new_data])]).tail(50)
 
-# Cálculo ICR vía Machine Learning
-engine = AIH_Predictor()
-icr_val = engine.get_risk_score(st.session_state.buffer)
+# Motor de Riesgo (ICR)
+scaler = StandardScaler()
+model = IsolationForest(contamination=0.05)
+if len(st.session_state.buffer) > 10:
+    X = scaler.fit_transform(st.session_state.buffer[['temp', 'dust']])
+    model.fit(X)
+    score = model.decision_function(X[-1:])
+    icr = max(0, min(100, 100 + (score[0] * 100)))
+else:
+    icr = 100.0
 
-# Métricas de Alta Visibilidad
+# --- 4. PANEL DE MÉTRICAS CRÍTICAS ---
+st.title("🛡️ AIHUMANITY | HSE | MASTER MONITOR")
+
 c1, c2, c3 = st.columns(3)
-c1.metric(L['icr'], f"{icr_val:.1f}%")
-c2.metric(L['dust'], f"{new_data['val2']:.1f} µg/m³")
-c3.metric(L['wind'], "14.2 KM/H")
+c1.metric("ÍNDICE ICR", f"{icr:.1f}%")
+c2.metric("POLVO PM10", f"{new_data['dust']:.1f} µg/m³")
+c3.metric("TEMPERATURA", f"{new_data['temp']:.2f} °C")
 
-# --- ONDAS DE RIESGO (PLOTLY ENGINE) ---
-st.subheader(L['wave'])
+# --- 5. ONDAS NEURALES DE ALTA DEFINICIÓN ---
 fig = go.Figure()
-fig.add_trace(go.Scatter(x=st.session_state.buffer['Time'], y=st.session_state.buffer['val2'],
-                         mode='lines+markers', line=dict(color='#000000', width=3), name="PM10 Pulse"))
-fig.add_trace(go.Scatter(x=st.session_state.buffer['Time'], y=st.session_state.buffer['val1']*5,
-                         mode='lines', line=dict(color='#D35400', width=4, dash='dot'), name="Stability Index"))
+fig.add_trace(go.Scatter(x=st.session_state.buffer['Time'], y=st.session_state.buffer['dust'],
+                         mode='lines+markers', line=dict(color='#000000', width=4), name="Pulso MP10"))
+fig.add_trace(go.Scatter(x=st.session_state.buffer['Time'], y=st.session_state.buffer['temp']*5,
+                         mode='lines', line=dict(color='#D35400', width=3, dash='dot'), name="Tendencia Térmica"))
 
-fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=20, r=20, t=20, b=20),
-                  xaxis=dict(showgrid=True, gridcolor='#EEE'), yaxis=dict(showgrid=True, gridcolor='#EEE'))
+fig.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin=dict(l=10, r=10, t=10, b=10),
+                  xaxis=dict(showgrid=True, gridcolor='#DDD'), yaxis=dict(showgrid=True, gridcolor='#DDD'))
 st.plotly_chart(fig, use_container_width=True)
 
-
-
-# Auto-refresh cada 2 segundos
-time.sleep(2)
+time.sleep(1)
 st.rerun()
