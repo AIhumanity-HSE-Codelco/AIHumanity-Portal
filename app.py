@@ -1,124 +1,157 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import time
+import plotly.graph_objects as go
 from datetime import datetime
+import time
 
-# 1. CONFIGURACIÓN DE ESCENARIO INDUSTRIAL (MODO FULL WIDTH)
+# 1. CONFIGURACIÓN DE INTERFAZ CUPERTINO (WHITE/SOFT)
 st.set_page_config(
-    page_title="AIH MASTER | PORTAL HSE",
-    page_icon="🛡️",
+    page_title="AIH Master | El Teniente HSE",
+    page_icon="🍏",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# 2. INYECCIÓN DE ADN VISUAL (CSS SEGURO PARA ALTO CONTRASTE)
+# 2. MOTOR DE ESTILOS CSS (CUSTOM UI)
 st.markdown("""
     <style>
-    /* Fondo Negro Profundo y texto claro */
-    .stApp { background-color: #050505; color: #e0e0e0; }
+    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;600&display=swap');
     
-    /* Header Estilo Minero Rajo Abierto */
-    .header-aih {
-        border-bottom: 3px solid #ffcc00;
-        padding: 20px;
-        background-color: #111;
-        margin-bottom: 30px;
-        text-align: center;
-        border-radius: 0 0 15px 15px;
-    }
+    html, body, [class*="css"] { font-family: 'SF Pro Display', sans-serif; background-color: #F5F5F7; color: #1D1D1F; }
+    .stApp { background-color: #F5F5F7; }
     
-    /* Métricas Neón (Prioridad Visual MP10/MP2.5) */
-    div[data-testid="stMetricValue"] { 
-        color: #66fcf1 !important; 
-        font-size: 3.8rem !important; 
-        font-weight: bold; 
-        text-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
-    }
-    div[data-testid="stMetricLabel"] { 
-        color: #ffcc00 !important; 
-        text-transform: uppercase; 
-        letter-spacing: 2px;
-        font-size: 0.9rem !important;
+    /* Tarjetas Modulares */
+    .mod-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 24px;
+        padding: 22px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+        border: 1px solid rgba(255,255,255,0.6);
+        margin-bottom: 20px;
     }
     
-    /* Contenedor de Alerta HSE */
-    .hse-card {
-        padding: 25px;
-        border-radius: 12px;
-        text-align: center;
-        margin-bottom: 25px;
-        border: 2px solid #00ff00;
-        background-color: rgba(0, 255, 0, 0.05);
+    /* Barra de Progreso Meta Cero */
+    .progress-bg { width: 100%; background-color: #E5E5EA; border-radius: 10px; height: 14px; margin: 10px 0; }
+    .progress-fill { height: 14px; border-radius: 10px; background: linear-gradient(90deg, #30D158, #34C759); transition: width 1s ease-in-out; }
+    
+    /* Botonera Digital */
+    .stButton>button {
+        width: 100%;
+        border-radius: 14px;
+        background: #F2F2F7;
+        color: #5E5CE6;
+        border: 1px solid #D1D1D6;
+        padding: 12px;
+        font-weight: 600;
+        transition: all 0.2s;
     }
+    .stButton>button:hover { background: #5E5CE6; color: white; border: none; transform: translateY(-2px); }
     </style>
+    """, unsafe_allow_html=True)
+
+# 3. MOTOR CENTRAL DE ÍNDICE DE RIESGO (AIH-CORE ENGINE)
+def get_live_metrics():
+    # Simulación de sensores Adeepminers
+    mp10 = 38.5 + np.random.uniform(-4, 6)
+    viento = 22 + np.random.uniform(-5, 5)
+    estabilidad = 98.4 - (mp10 * 0.04)
+    gases = 15 + np.random.uniform(0, 10)
     
-    <div class="header-aih">
-        <h1 style="color: #ffcc00; margin: 0; font-family: 'Arial Black';">🛡️ AIHUMANITY | INTELLIGENCE HSE</h1>
-        <p style="color: #66fcf1; margin: 0; font-size: 1.2rem; letter-spacing: 3px;">CENTRO DE CONTROL DE RIESGO PREVENTIVO - TRL-3/4</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Cálculo de Riesgo Acumulado (Pesos: Geo 40%, Polvo 30%, Gases 20%, Viento 10%)
+    risk_index = (mp10*0.3) + ((100-estabilidad)*2.5) + (gases*0.2) + (viento*0.1)
+    return round(mp10, 1), round(viento, 1), round(estabilidad, 1), round(gases, 1), round(risk_index, 1)
 
-# 3. LÓGICA DE DATOS DINÁMICOS (Simulación de Sensores)
-# En TRL-5 esto se conectará a la DB local o MQTT
-np.random.seed(int(time.time()))
-mp10_val = round(40 + np.random.uniform(-2, 5), 1)
-mp25_val = round(12 + np.random.uniform(-1, 3), 1)
-viento_val = np.random.randint(15, 25)
+mp10, wind, stab, gas, risk = get_live_metrics()
+meta_zero_val = 100 - (risk * 0.4)
 
-# 4. PRIORIDAD 1: ESTADO CRÍTICO HSE (VISUALIZACIÓN TIPO ZYGHT PRO)
+# 4. MODULO 1 & 2: STATUS BAR & REGIONAL TIME
 st.markdown(f"""
-    <div class="hse-card">
-        <h2 style="color: #00ff00; margin:0;">✅ STATUS: OPERACIÓN SEGURA</h2>
-        <p style="color: #aaa; margin:5px 0 0 0;">Cumplimiento Estándares ICMM y Normativa Ambiental</p>
+    <div style="display: flex; justify-content: space-between; padding: 10px 20px; background: white; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+        <span style="font-weight:600; color:#5E5CE6;">📍 EL TENIENTE SUBTERRÁNEA</span>
+        <span style="color:#8E8E93;">{datetime.now().strftime('%d/%m/%Y | %H:%M:%S')} CLT</span>
+        <span style="color:#30D158; font-weight:600;">● SISTEMA SINCRONIZADO</span>
     </div>
     """, unsafe_allow_html=True)
 
-# 5. PRIORIDAD 2 Y 3: KPI DE MATERIAL PARTICULADO Y CLIMA
-col1, col2, col3, col4 = st.columns(4)
+# 5. DASHBOARD LAYOUT
+col_stats, col_radar, col_alerts = st.columns([1, 2, 1])
 
-with col1:
-    st.metric(label="MP10 (Polvo)", value=f"{mp10_val}", delta="-1.4 µg/m³", delta_color="inverse")
-with col2:
-    st.metric(label="MP2.5 (Fino)", value=f"{mp25_val}", delta="0.2 µg/m³", delta_color="inverse")
-with col3:
-    st.metric(label="Viento", value=f"{viento_val} km/h", delta="DIR: NE")
-with col4:
-    st.metric(label="Talud / Raveling", value="OK", delta="Estabilidad: 99.2%")
+# --- COLUMNA IZQUIERDA: META CERO & VIENTO ---
+with col_stats:
+    st.markdown(f"""
+        <div class="mod-card">
+            <p style="color:#8E8E93; font-size:0.8rem; margin:0;">META CERO OBJETIVO</p>
+            <h2 style="color:#30D158; margin:0;">{round(meta_zero_val,1)}%</h2>
+            <div class="progress-bg"><div class="progress-fill" style="width: {meta_zero_val}%;"></div></div>
+            <p style="font-size:0.75rem; color:#1D1D1F;">Días sin incidentes: <b>442</b></p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown(f"""
+        <div class="mod-card">
+            <p style="color:#8E8E93; font-size:0.8rem; margin:0;">VIENTO Y DISPERSIÓN</p>
+            <h3 style="margin:0; color:#1D1D1F;">{wind} <small>km/h</small></h3>
+            <p style="color:#5E5CE6; font-size:0.8rem;">Vector: NE | Dispersión Baja</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-# 6. VISTA OPERADOR: GRÁFICAS DE TENDENCIA (ANÁLISIS PREDICTIVO)
-st.divider()
-st.write("### 📈 Análisis de Tendencia Histórica (Real-Time)")
+# --- COLUMNA CENTRAL: RADAR HSE-STOP-WORK ---
+with col_radar:
+    st.markdown('<div class="mod-card" style="text-align:center;">', unsafe_allow_html=True)
+    st.markdown("<p style='font-weight:600;'>ÍNDICE DE RIESGO GLOBAL ACUMULATIVO</p>", unsafe_allow_html=True)
+    
+    # Plotly Radar Chart
+    categories = ['Polvo MP10', 'Geomecánica', 'Gases CO/NOx', 'Viento/Disp.', 'Tránsito']
+    fig = go.Figure()
+    fig.add_trace(go.Scatterpolar(
+        r=[mp10, 100-stab, gas, wind, 25],
+        theta=categories,
+        fill='toself',
+        fillcolor='rgba(94, 92, 230, 0.2)',
+        line=dict(color='#5E5CE6', width=3)
+    ))
+    fig.update_layout(
+        polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+        showlegend=False,
+        margin=dict(t=30, b=30, l=40, r=40),
+        paper_bgcolor='rgba(0,0,0,0)'
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Dinámica de Color de Riesgo
+    status_color = "#30D158" if risk < 40 else "#FF9500" if risk < 70 else "#FF3B30"
+    st.markdown(f"<h1 style='color:{status_color}; margin:0;'>{risk} IRG</h1>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# Generar data de simulación para las últimas 24 iteraciones
-chart_data = pd.DataFrame(
-    np.random.randn(24, 2),
-    columns=['Polución (MP10)', 'Vibración Talud']
-)
+# --- COLUMNA DERECHA: ALERTAS & REPORTES ---
+with col_alerts:
+    st.markdown('<div class="mod-card">', unsafe_allow_html=True)
+    st.markdown("<p style='font-weight:600;'>REPORTES HSE DIGITALES</p>", unsafe_allow_html=True)
+    st.button("📥 Descargar Reporte Turno")
+    st.button("📉 Ver KPIs Históricos")
+    st.divider()
+    st.error("⚠️ ALERTA: Ventilación G-4")
+    st.warning("☁️ CLIMA: Rachas 40km/h")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# Gráfico de área para visibilidad industrial
-st.area_chart(chart_data, height=300, color=["#66fcf1", "#ffcc00"])
+# 6. MODULOS INFERIORES: GEOLOCALIZACIÓN & BOTONERA
+st.markdown("### 📍 Geolocalización Adeepminers (Red Intra-Mina)")
+m_map, m_btns = st.columns([3, 1])
 
+with m_map:
+    # Simulación de puntos Adeepminers en El Teniente
+    map_df = pd.DataFrame(
+        np.random.randn(8, 2) / [180, 180] + [-34.05, -70.45],
+        columns=['lat', 'lon']
+    )
+    st.map(map_df, zoom=13)
 
+with m_btns:
+    st.write("### Panel Digital")
+    st.button("🔄 Sync Nodos")
+    st.button("📡 Calibrar GPS")
+    st.button("🆘 STOP-WORK", type="primary")
 
-# 7. GESTIÓN DE RIESGOS (FOCO MINERO)
-col_info, col_diag = st.columns([2, 1])
-
-with col_info:
-    st.info("""
-    **NOTAS DE OPERACIÓN:**
-    - Supresión de polvo activa en Sector Norte (Chancado).
-    - Monitoreo de estabilidad en Fase 4 sin anomalías detectadas.
-    - Protocolo HSE alineado con objetivos de sostenibilidad 2026.
-    """)
-
-with col_diag:
-    with st.expander("🛠️ DIAGNÓSTICO DE NODO AIH"):
-        st.write(f"**Último Pulso:** {datetime.now().strftime('%H:%M:%S')}")
-        st.write("**Nodo:** ESP32-G4-MINA")
-        st.write("**Red:** Híbrida (WiFi/LoRa)")
-        st.progress(94, text="Carga de Batería")
-
-# 8. FOOTER TÉCNICO
 st.markdown("---")
-st.caption("AIHumanity Master | Prototipo Funcional TRL-3 para CODELCO/BHP. Prohibida su reproducción sin autorización.")
+st.caption("AIHumanity Core v4.0 | El Teniente Subterránea | Software Robustness: High Availability")
