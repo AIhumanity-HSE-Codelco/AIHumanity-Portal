@@ -2,136 +2,155 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import pydeck as pdk
+import requests
 from datetime import datetime
 import time
 
-# 1. SETUP RESPONSIVO (AJUSTADO PARA LAPTOPS Y MÓVILES)
-st.set_page_config(page_title="AIH | Emergency Control", layout="wide", initial_sidebar_state="collapsed")
+# 1. SETUP DE ALTA DENSIDAD (OPTIMIZADO LAPTOP/MÓVIL)
+st.set_page_config(page_title="AIH | Global Intelligence", layout="wide", initial_sidebar_state="expanded")
 
-# 2. CSS DE ALTA PRECISIÓN (ESTILO CUPERTINO INDUSTRIAL DARK-MODAL)
+# 2. MOTOR DE DATOS SÍSMICOS (USGS REAL-TIME)
+@st.cache_data(ttl=300)
+def get_global_seismic_data():
+    try:
+        # Sismos magnitud 4.5+ en las últimas 24h
+        url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson"
+        resp = requests.get(url).json()
+        features = resp['features']
+        data = []
+        for f in features:
+            coords = f['geometry']['coordinates']
+            props = f['properties']
+            data.append({
+                "name": props['title'],
+                "mag": props['mag'],
+                "lat": coords[1],
+                "lon": coords[0],
+                "depth": coords[2],
+                "time": datetime.fromtimestamp(props['time']/1000).strftime('%H:%M')
+            })
+        return pd.DataFrame(data)
+    except:
+        # Fallback en caso de error de red
+        return pd.DataFrame(columns=["name", "mag", "lat", "lon", "depth", "time"])
+
+# 3. CSS INDUSTRIAL (CUPERTINO DARK/LIGHT)
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color: #F8F9FA; color: #1D1D1F; }
-    
-    /* Optimización de texto para pantallas pequeñas */
-    .metric-value { font-size: 1.8rem !important; font-weight: 800; color: #1D1D1F; }
-    .label-micro { font-size: 0.7rem; color: #8E8E93; font-weight: 600; text-transform: uppercase; }
-    
-    /* Módulos de Despacho */
-    .dispatch-card {
-        background: white;
-        padding: 15px;
-        border-radius: 16px;
-        border-left: 6px solid #FF3B30;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        margin-bottom: 10px;
-    }
-    .btn-emergency {
-        background-color: #FF3B30 !important;
-        color: white !important;
-        font-weight: bold !important;
-        height: 60px !important;
-        border-radius: 12px !important;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; font-size: 0.9rem; }
+    .stMetric { background: white; padding: 10px; border-radius: 12px; border: 1px solid #EEE; }
+    .module-card { background: white; padding: 15px; border-radius: 16px; border: 1px solid #E5E9F0; margin-bottom: 10px; }
+    .emergency-btn { background-color: #FF3B30 !important; color: white !important; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. NAVEGADOR ESTRATÉGICO
+# 4. NAVEGADOR LATERAL
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/1022/1022331.png", width=70)
-    st.title("AIH MASTER")
-    modulo = st.radio("MÓDULO:", ["🏠 Dashboard Operativo", "🌪️ Analizador ADMS", "🚨 Despacho Emergencias"])
+    st.image("https://cdn-icons-png.flaticon.com/512/2784/2784400.png", width=70)
+    st.title("AIH COMMAND")
+    modulo = st.radio("MÓDULO SELECCIONADO:", 
+                     ["🏠 Dashboard Operativo", 
+                      "🌪️ Analizador ADMS", 
+                      "🚨 Despacho Emergencias", 
+                      "🌍 Inteligencia Geofísica"])
     st.divider()
-    st.caption("v7.0 | TRL-4 Rescue Ready")
+    st.caption("v8.0 | TRL-4 Global Ready")
 
-# --- LÓGICA DE PÁGINAS ---
+# --- LÓGICA DE MÓDULOS ---
 
-# MÓDULO 1: DASHBOARD OPERATIVO (REDISEÑADO SIN LATENCIA)
-if modulo == "🏠 Dashboard Operativo":
-    st.markdown("<h3 style='margin:0;'>📊 ESTADO OPERATIVO INTEGRADO</h3>", unsafe_allow_html=True)
+if modulo == "🌍 Inteligencia Geofísica":
+    st.markdown("<h2 style='color:#5E5CE6;'>🌍 INTELIGENCIA GEOFÍSICA: CINTURÓN DE FUEGO</h2>", unsafe_allow_html=True)
     
-    # KPIs Rápidos y Legibles
-    c1, c2, c3, c4 = st.columns([1,1,1,1])
+    df_sismos = get_global_seismic_data()
+    
+    # KPIs Globales
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Sismos Recientes (24h)", len(df_sismos), "Global")
+    if not df_sismos.empty:
+        max_mag = df_sismos['mag'].max()
+        m2.metric("Magnitud Máxima", f"{max_mag} Mw", "Cinturón de Fuego")
+        m3.metric("Estatus Tectónico", "ALERTA", "Actividad Alta", delta_color="inverse")
+
+    col_mapa, col_lista = st.columns([2, 1])
+
+    with col_mapa:
+        # MAPA 3D (PYDECK) - Cinturón de Fuego
+        layer = pdk.Layer(
+            "ColumnLayer",
+            df_sismos,
+            get_position=["lon", "lat"],
+            get_elevation="mag * 50000", # Elevación proporcional a la magnitud
+            elevation_scale=1,
+            radius=150000,
+            get_fill_color=["mag * 40", "255 - (mag * 20)", 150, 200], # Color según magnitud
+            pickable=True,
+            auto_highlight=True,
+        )
+        
+        view_state = pdk.ViewState(latitude=-15, longitude=-120, zoom=1, pitch=40)
+        
+        st.pydeck_chart(pdk.Deck(
+            layers=[layer],
+            initial_view_state=view_state,
+            map_style="mapbox://styles/mapbox/light-v9",
+            tooltip={"text": "{name}\nMagnitud: {mag}\nProfundidad: {depth}km"}
+        ))
+        st.caption("Visualización 3D: La altura y el color representan la magnitud del sismo.")
+
+    with col_lista:
+        st.markdown("### 📋 Feed Sísmico (USGS)")
+        if df_sismos.empty:
+            st.info("No se registran eventos mayores a 4.5 en las últimas horas.")
+        else:
+            for i, row in df_sismos.head(8).iterrows():
+                st.markdown(f"""
+                <div class="module-card">
+                    <b>{row['mag']} Mw</b> - {row['name']}<br>
+                    <small style='color:grey;'>Hora: {row['time']} | Prof: {row['depth']}km</small>
+                </div>
+                """, unsafe_allow_html=True)
+
+elif modulo == "🏠 Dashboard Operativo":
+    st.markdown("### 🛰️ CONTROL TOWER (TRAZABILIDAD)")
+    c1, c2, c3, c4 = st.columns(4)
     c1.metric("META CERO", "96%", "OK")
     c2.metric("MP10", "34.2", "-2.1")
-    c3.metric("NODOS", "12/12", "LIVE")
-    c4.metric("RIESGO", "BAJO", "12%")
-
+    c3.metric("NODOS LIVE", "12/12", "OK")
+    c4.metric("IRO", "12%", "BAJO")
+    
     st.write("---")
-    
-    # REEMPLAZO DEL RADAR (MENOS LATENCIA)
-    col_traz, col_stats = st.columns([1, 1])
-    
-    with col_traz:
-        st.markdown("<b>👥 TRAZABILIDAD DE PERSONAL</b>", unsafe_allow_html=True)
-        t_data = pd.DataFrame({
-            "Operador": ["J. Pérez", "M. Soto", "L. Mora", "A. Ruiz"],
-            "Zona": ["Nivel 4", "Chancado", "Rampa", "Stock"],
-            "Status": ["Seguro", "Seguro", "Alerta", "Seguro"]
-        })
-        st.table(t_data)
+    st_izq, st_der = st.columns(2)
+    with st_izq:
+        st.markdown("<b>👥 Trazabilidad Personal</b>", unsafe_allow_html=True)
+        st.table(pd.DataFrame({"Operador": ["J. Pérez", "M. Soto"], "Zona": ["Nivel 4", "Rampa"], "Status": ["Seguro", "Seguro"]}))
+    with st_der:
+        st.markdown("<b>📈 Histórico Sismográfico Local</b>", unsafe_allow_html=True)
+        st.line_chart(np.random.randn(20, 1) * 0.01, height=180)
 
-    with col_stats:
-        st.markdown("<b>📈 TENDENCIA AMBIENTAL (24H)</b>", unsafe_allow_html=True)
-        chart_data = pd.DataFrame(np.random.randn(20, 2), columns=['MP10', 'Humedad'])
-        st.line_chart(chart_data, height=200)
-
-# MÓDULO 3: DESPACHO DE EMERGENCIAS (EL NUEVO ANALIZADOR)
 elif modulo == "🚨 Despacho Emergencias":
-    st.markdown("<h2 style='color:#FF3B30;'>🚨 CENTRO DE DESPACHO Y RESCATE</h2>", unsafe_allow_html=True)
-    
-    # FILA DE BOTONES DE ACTIVACIÓN INMEDIATA (PROTOCOLO)
-    st.write("### ⚡ ACTIVACIÓN DE PROTOCOLO")
+    st.markdown("<h2 style='color:#FF3B30;'>🚨 GESTIÓN DE CRISIS Y RESCATE</h2>", unsafe_allow_html=True)
     b1, b2, b3, b4 = st.columns(4)
-    with b1: 
-        if st.button("🚒 BOMBEROS", use_container_width=True): st.toast("Despachando Bomberos...")
-    with b2: 
-        if st.button("🚑 AMBULANCIA", use_container_width=True): st.toast("Despachando SAMU...")
-    with b3: 
-        if st.button("👮 POLICÍA", use_container_width=True): st.toast("Avisando a Carabineros...")
-    with b4: 
-        if st.button("⛏️ RESCATE MINERO", use_container_width=True): st.toast("Activando Brigada...")
-
+    b1.button("🚒 BOMBEROS", use_container_width=True)
+    b2.button("🚑 AMBULANCIA", use_container_width=True)
+    b3.button("👮 POLICÍA", use_container_width=True)
+    b4.button("⛏️ RESCATE MINERO", use_container_width=True)
+    
     st.divider()
+    st.markdown("### 📝 Incidentes Activos")
+    st.error("INC-092: Amago de Incendio en Nivel 4 - Brigada en ruta.")
+    st.map(pd.DataFrame({'lat': [-34.05], 'lon': [-70.45]}), zoom=14, height=200)
 
-    # TRAZABILIDAD DE INCIDENTES ACTIVOS
-    col_active, col_log = st.columns([2, 1])
+elif modulo == "🌪️ Analizador ADMS":
+    st.markdown("### 🌪️ MODELO ADMS (METEOROLOGÍA)")
+    st.info("Monitorizando dispersión de polvo en El Teniente...")
+    # Lógica de ADMS simplificada
+    st.metric("Viento NE", "22 km/h", "ESTABLE")
+    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Gaussian_Plume_Model.png/300px-Gaussian_Plume_Model.png")
 
-    with col_active:
-        st.markdown("### 📋 Incidentes en Curso")
-        st.markdown("""
-        <div class="dispatch-card">
-            <div style="display:flex; justify-content:space-between;">
-                <b>ID: INC-092 - AMAGO DE INCENDIO</b>
-                <span style="color:#FF3B30; font-weight:bold;">EN CURSO</span>
-            </div>
-            <p class="label-micro">UBICACIÓN: NIVEL 4 SECTOR ALPHA | DESPACHO: 18:05:12</p>
-            <progress value="75" max="100" style="width:100%;"></progress>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Mapa de ubicación del incidente
-        st.markdown("<b>📍 UBICACIÓN DEL RESCATE (GEOPOSICIÓN)</b>", unsafe_allow_html=True)
-        st.map(pd.DataFrame({'lat': [-34.05], 'lon': [-70.45]}), zoom=14, height=250)
-        
-
-    with col_log:
-        st.markdown("### 📜 Log de Trazabilidad")
-        st.caption("18:10 - Brigada de Rescate ingresa a Nivel 4")
-        st.caption("18:06 - Bomberos confirmados en ruta")
-        st.caption("18:05 - Alarma activada por Nodo ESP32-04")
-        st.divider()
-        st.write("<b>Protocolo sugerido:</b> Evacuación Sector Alpha por rampa de emergencia.")
-
-# MÓDULO 2 (EL QUE YA TENÍAMOS BLINDADO)
-else:
-    st.markdown("<h2 style='color:#5E5CE6;'>🌪️ METEOROLOGÍA & ADMS</h2>", unsafe_allow_html=True)
-    st.info("Visualizando Modelo de Dispersión Atmosférica...")
-    # (Aquí va la lógica de ADMS que ya probamos)
-
-# 4. FOOTER DINÁMICO
+# 5. FOOTER & AUTO-REFRESH
 st.divider()
-st.caption(f"AIHumanity Master | Login: Admin | {datetime.now().strftime('%H:%M:%S')} | No Masivo")
-time.sleep(1.5)
+st.caption(f"AIHumanity Master | {datetime.now().strftime('%H:%M:%S')} | TRL-4")
+time.sleep(2)
 st.rerun()
