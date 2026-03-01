@@ -3,94 +3,115 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
-from sqlalchemy import create_engine # Para Blindaje de DB M12
 
-# --- 1. CONFIGURACIÓN Y BLINDAJE DE ENTORNO ---
-st.set_page_config(page_title="AIH MASTER | THE VAULT V20.1", layout="wide", initial_sidebar_state="expanded")
+# --- 1. CONFIGURACIÓN CORE Y BLINDAJE ---
+st.set_page_config(page_title="AIH MASTER | V21.0", layout="wide", initial_sidebar_state="expanded")
 
-def apply_blindaje_cupertino():
+def apply_style():
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap');
         .stApp { background-color: #F5F5F7; color: #1D1D1F; font-family: 'SF Pro Display', sans-serif; }
-        div[data-testid="stMetric"] { background-color: #FFFFFF; border: 1px solid #D2D2D7; padding: 20px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .stButton>button { border-radius: 12px; background-color: #0071E3; color: white; border: none; font-weight: 600; width: 100%; height: 3.5em; }
-        .module-card { background: white; padding: 25px; border-radius: 18px; border: 1px solid #D2D2D7; margin-bottom: 20px; }
-        .id-badge { background: #E5E5EA; color: #1D1D1F; padding: 4px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 600; }
+        div[data-testid="stMetric"] { background-color: #FFFFFF; border: 1px solid #D2D2D7; padding: 20px; border-radius: 14px; }
+        .module-header { color: #0071E3; font-weight: 600; border-bottom: 2px solid #0071E3; margin-bottom: 20px; }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 2. FUNCIONES DE MÓDULOS BLINDADOS (LÓGICA INMUTABLE) ---
+# --- 2. DEFINICIÓN DE LOS 13 PILARES (FUNCIONES) ---
 
-def render_m11_acustica():
-    st.markdown("## <span class='id-badge'>M11</span> 🔊 Higiene Acústica", unsafe_allow_html=True)
-    c1, c2 = st.columns([1, 2])
-    with c1:
-        st.metric("Nivel Sonoro (Leq)", "84.2 dB(A)", "Límite 85", delta_color="inverse")
-        st.info("💡 Exposición máxima permitida: 8.5 horas.")
-    with c2:
-        st.markdown("### **Espectro de Frecuencia (Análisis FFT)**")
-        st.line_chart(np.random.normal(70, 15, 50), color="#FF9500")
-        
-
-def render_m12_mantenimiento():
-    st.markdown("## <span class='id-badge'>M12</span> 🛠️ Mantenimiento (CMMS)", unsafe_allow_html=True)
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.metric("Disponibilidad Flota", "91.5%", "+0.5%")
-    with col_b:
-        st.metric("MTBF Promedio", "142 hrs", "Estable")
-    
-    st.write("### Backlog de Órdenes de Trabajo (Blindado)")
-    ots = pd.DataFrame({
-        "ID": ["OT-99", "OT-102"], "Activo": ["Faja 04", "Motor 22"], 
-        "Causa": ["Vibración M08", "Consumo M04"], "Prioridad": ["ALTA", "MEDIA"]
-    })
-    st.table(ots)
-
-def render_m13_reportes():
-    st.markdown("## <span class='id-badge'>M13</span> 📊 Reportabilidad Legal & BI", unsafe_allow_html=True)
-    st.markdown("<div class='module-card'>", unsafe_allow_html=True)
-    st.write("### Generador de Cumplimiento Inmutable")
-    st.selectbox("Seleccione Reporte:", ["HSE Mensual", "Eficiencia Energética", "Mapa de Riesgo IRC"])
-    if st.button("🔒 FIRMAR Y DESCARGAR REPORTE (PDF)"):
-        st.success("Reporte generado con Hash: 0x88F...44A")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# --- 3. REINTEGRACIÓN DEL CEREBRO (IRC) ---
-def render_core_v20():
-    st.markdown("## 🧠 El Cerebro: Gobernanza AIH V20.1", unsafe_allow_html=True)
-    st.metric("IRC GLOBAL", "46.2%", "Detección de Ruido +1.2%")
-    st.divider()
-    # Radar Completo de 13 Factores
-    fig = go.Figure(go.Scatterpolar(
-        r=[40, 30, 25, 60, 20, 30, 15, 45, 10, 70, 35, 20, 10], 
-        theta=['Gases','Bio','Energía','GIS','Sismo','PHM','ADMS','Humano','Clima','Behavior','Ruido','Maint','BI'],
-        fill='toself', line_color='#0071E3', fillcolor='rgba(0, 113, 227, 0.3)'
-    ))
-    fig.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 100])), height=550, margin=dict(t=20,b=20))
+def mod_01():
+    st.markdown("<h2 class='module-header'>01 💎 EL CEREBRO (IRC)</h2>", unsafe_allow_html=True)
+    st.metric("IRC GLOBAL", "46.2%", "Detección Crítica")
+    fig = go.Figure(go.Scatterpolar(r=[40, 30, 25, 60, 20, 30, 15, 45, 10, 70, 35, 20, 10], 
+        theta=['Gas','Bio','Eng','GIS','Sis','PHM','Polvo','Hum','Clima','Beh','Ruido','Main','BI'], fill='toself'))
     st.plotly_chart(fig, use_container_width=True)
+    
 
-# --- 4. NAVEGACIÓN Y EJECUCIÓN ---
+def mod_02():
+    st.markdown("<h2 class='module-header'>02 💨 GASES CRÍTICOS (M06)</h2>", unsafe_allow_html=True)
+    st.columns(2)[0].metric("O2", "20.9%", "Nominal")
+    st.columns(2)[1].metric("CO", "12 ppm", "Safe")
+    
+
+def mod_03():
+    st.markdown("<h2 class='module-header'>03 🧬 BIOMETRÍA & FATIGA (M07)</h2>", unsafe_allow_html=True)
+    st.metric("Fatiga Index", "14%", "Bajo")
+    
+
+def mod_04():
+    st.markdown("<h2 class='module-header'>04 ⚡ ENERGÍA & FLOTA (M08)</h2>", unsafe_allow_html=True)
+    st.metric("Eficiencia", "1.1 kWh/Ton", "Óptimo")
+
+def mod_05():
+    st.markdown("<h2 class='module-header'>05 🗺️ GIS & TALUDES (M09)</h2>", unsafe_allow_html=True)
+    st.metric("FoS", "1.45", "Estable")
+    
+
+def mod_06():
+    st.markdown("<h2 class='module-header'>06 🌪️ ADMS & POLVO</h2>", unsafe_allow_html=True)
+    st.metric("MP10", "38 µg/m³", "Safe")
+    
+
+def mod_07():
+    st.markdown("<h2 class='module-header'>07 🌍 SISMO (LIVE)</h2>", unsafe_allow_html=True)
+    st.info("Sincronización USGS Activa.")
+
+def mod_08():
+    st.markdown("<h2 class='module-header'>08 ⚙️ ACTIVOS (PHM)</h2>", unsafe_allow_html=True)
+    st.line_chart(np.random.randn(20))
+
+def mod_09():
+    st.markdown("<h2 class='module-header'>09 🚨 EMERGENCIAS</h2>", unsafe_allow_html=True)
+    st.error("Protocolos de Evacuación Cargados.")
+
+def mod_10():
+    st.markdown("<h2 class='module-header'>10 👥 COMPORTAMIENTO PREDICTIVO</h2>", unsafe_allow_html=True)
+    st.metric("Actitud Segura", "98%", "Alta")
+    
+
+def mod_11():
+    st.markdown("<h2 class='module-header'>11 🔊 HIGIENE ACÚSTICA</h2>", unsafe_allow_html=True)
+    st.metric("Ruido Leq", "82 dB(A)", "Bajo Límite")
+    
+
+def mod_12():
+    st.markdown("<h2 class='module-header'>12 🛠️ MANTENIMIENTO (CMMS)</h2>", unsafe_allow_html=True)
+    st.write("Órdenes de Trabajo Generadas: 2")
+
+def mod_13():
+    st.markdown("<h2 class='module-header'>13 📊 REPORTABILIDAD (BI)</h2>", unsafe_allow_html=True)
+    st.button("Generar Reporte Consolidado V21.0")
+
+# --- 3. DICCIONARIO DE ENRUTAMIENTO (EL MAPA MAESTRO) ---
+MAPA_MODULOS = {
+    "01 💎 EL CEREBRO": mod_01,
+    "02 💨 GASES (M06)": mod_02,
+    "03 🧬 BIOMETRÍA (M07)": mod_03,
+    "04 ⚡ ENERGÍA (M08)": mod_04,
+    "05 🗺️ GIS/TALUDES (M09)": mod_05,
+    "06 🌪️ ADMS/POLVO": mod_06,
+    "07 🌍 SISMO": mod_07,
+    "08 ⚙️ ACTIVOS (PHM)": mod_08,
+    "09 🚨 EMERGENCIAS": mod_09,
+    "10 👥 COMPORTAMIENTO": mod_10,
+    "11 🔊 ACÚSTICA": mod_11,
+    "12 🛠️ MANTENIMIENTO": mod_12,
+    "13 📊 REPORTES": mod_13
+}
+
+# --- 4. EJECUCIÓN MAESTRA ---
 def main():
-    apply_blindaje_cupertino()
+    apply_style()
     with st.sidebar:
         st.markdown("### **AIH MASTER CONTROL**")
-        st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=60)
-        
-        sel = st.selectbox("ESTRUCTURA DE MÓDULOS:", [
-            "01 💎 EL CEREBRO (IRC)", "11 🔊 ACÚSTICA", "12 🛠️ MANTENIMIENTO", "13 📊 REPORTES",
-            "02 💨 GASES", "03 🧬 BIOMETRÍA", "04 ⚡ ENERGÍA", "05 🗺️ GIS", "10 👥 BEHAVIOR"
-        ])
+        st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=50)
+        # Selección Forzada y Blindada
+        seleccion = st.selectbox("LISTA DE 13 MÓDULOS:", list(MAPA_MODULOS.keys()))
         st.divider()
-        st.caption(f"V20.1 | THE VAULT | {datetime.now().strftime('%H:%M')}")
+        st.caption(f"V21.0 | Bóveda Recuperada | {datetime.now().strftime('%H:%M')}")
 
-    # ROUTER BLINDADO
-    if sel == "01 💎 EL CEREBRO (IRC)": render_core_v20()
-    elif sel == "11 🔊 ACÚSTICA": render_m11_acustica()
-    elif sel == "12 🛠️ MANTENIMIENTO": render_m12_mantenimiento()
-    elif sel == "13 📊 REPORTES": render_m13_reportes()
-    else: st.info(f"Módulo {sel} Activo en Segundo Plano.")
+    # Ejecución dinámica: Llama a la función según la llave del diccionario
+    MAPA_MODULOS[seleccion]()
 
 if __name__ == "__main__":
     main()
