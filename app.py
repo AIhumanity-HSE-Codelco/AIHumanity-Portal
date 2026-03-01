@@ -4,15 +4,15 @@ import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
 
-# --- 1. CONFIGURACIÓN INMUTABLE V32 ---
-st.set_page_config(page_title="AIH MASTER | NUCLEAR VAULT V32", layout="wide")
+# --- 1. CONFIGURACIÓN DE NÚCLEO INMUNE ---
+st.set_page_config(page_title="AIH MASTER | BÚNKER V32.1", layout="wide")
 
-# --- 2. BLINDAJE VISUAL ATÓMICO ---
+# --- 2. BLINDAJE VISUAL ATÓMICO (CUPERTINO WHITE) ---
 def apply_bunker_style():
     st.markdown("""
         <style>
         .stApp { background-color: #FFFFFF !important; color: #1D1D1F !important; font-family: -apple-system, sans-serif !important; }
-        section[data-testid="stSidebar"] { background-color: #F5F5F7 !important; border-right: 1px solid #D2D2D7 !important; width: 450px !important; }
+        section[data-testid="stSidebar"] { background-color: #F5F5F7 !important; border-right: 1px solid #D2D2D7 !important; width: 480px !important; }
         div[data-testid="stMetric"] { 
             background-color: #FFFFFF !important; 
             border: 1px solid #D2D2D7 !important; 
@@ -21,7 +21,9 @@ def apply_bunker_style():
             box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
         }
         h1, h2, h3 { color: #1D1D1F !important; font-weight: 600 !important; }
-        .stRadio > label { font-size: 0.85em !important; font-weight: 700 !important; color: #86868B !important; }
+        .stRadio > label { font-size: 0.85em !important; font-weight: 700 !important; color: #86868B !important; margin-bottom: 8px !important; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #D2D2D7; border-radius: 10px; }
         </style>
         """, unsafe_allow_html=True)
 
@@ -37,64 +39,60 @@ MODULOS_48 = [
     "29 🚛 FATIGA ACTIVOS", "30 ☁️ INVERSIÓN TÉRMICA", "31 🛤️ CONTROL LHD", "32 🌊 GESTIÓN RELAVES",
     "33 🛡️ CIBERSEGURIDAD", "34 🔋 MICRO-REDES", "35 🧬 EPIGENÉTICA", "36 📉 FRAGMENTACIÓN", 
     "37 🕊️ COMUNIDADES", "38 ♻️ ECONOMÍA CIRCULAR", "39 🤖 FLOTA AUTÓNOMA", "40 🔮 ESCENARIOS 4D",
-    # --- EXPANSIÓN QUÍMICA Y NUCLEAR (M41-M48) ---
     "41 ☢️ DOSIMETRÍA IONIZANTE", "42 🌫️ GAS RADÓN", "43 🧪 ESPECTROMETRÍA XRF", "44 💧 HIDROQUÍMICA", 
     "45 🧬 BIO-LIXIVIACIÓN", "46 🌋 VAPOR MERCURIO", "47 💨 QUÍMICA AIRE", "48 🧪 REACTIVOS"
 ]
 
-# --- 4. RENDERIZADO ---
+# --- 4. MOTOR DE GOBERNANZA ---
 
 def render_01_nuclear_radar():
-    st.title("01 💎 Cerebro de Riesgo Forense (IRC-48)")
-    # Radar de 48 Analizadores
+    st.title("01 💎 Cerebro Forense (IRC-48)")
+    st.write("### Integración de Riesgos Físicos, Químicos y Nucleares")
+    
     etiquetas = [m[:6] for m in MODULOS_48]
-    valores = np.random.randint(15, 85, 48)
+    valores = np.random.randint(10, 80, 48)
     
     fig = go.Figure(go.Scatterpolar(
         r=valores, theta=etiquetas, fill='toself', 
-        line_color='#FF3B30', fillcolor='rgba(255, 59, 48, 0.08)' # Rojo suave para alerta nuclear
+        line_color='#FF3B30', fillcolor='rgba(255, 59, 48, 0.05)' 
     ))
     fig.update_layout(
         polar=dict(radialaxis=dict(visible=False), angularaxis=dict(gridcolor="#E5E5E5", tickfont=dict(size=6))),
-        paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=50, b=50), height=800
+        paper_bgcolor='rgba(0,0,0,0)', height=850
     )
     st.plotly_chart(fig, use_container_width=True)
     
-    
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("IRC NUCLEAR", f"{valores.mean():.1f}%", "+0.2%")
-    c2.metric("NIVEL RADIACIÓN", "0.15 µSv/h", "Normal")
-    c3.metric("PH ACUÍFEROS", "7.2", "Estable")
-    c4.metric("RADÓN MÁX", "120 Bq/m3", "Seguro")
+    c1.metric("IRC AGREGADO", f"{valores.mean():.1f}%", "Nominal")
+    c2.metric("TRAZAS RADIACTIVAS", "Bajas", "Controlado")
+    c3.metric("ESTABILIDAD PH", "7.1", "Estable")
+    c4.metric("NODOS SINC", "70,000", "Sync")
 
 def render_fallback(nombre):
     st.title(nombre)
     st.markdown("---")
     c1, c2 = st.columns([2, 1])
     with c1:
-        st.write("### Telemetría Geoquímica")
-        st.line_chart(np.random.normal(50, 15, 24), color="#FF3B30" if "☢️" in nombre else "#0071E3")
+        st.write("### Telemetría Crítica")
+        color = "#FF3B30" if any(x in nombre for x in ["☢️", "🧪", "🌋"]) else "#0071E3"
+        st.line_chart(np.random.normal(50, 10, 24), color=color)
     with c2:
-        st.metric("Estado Sensor", "CALIBRADO", "Sync")
-        st.info(f"Analizador {nombre} integrando trazas químicas y radiactividad.")
+        st.metric("Estado", "OPERATIVO", "Sync")
+        st.info(f"Analizador {nombre} blindado. TRL-4+.")
 
 # --- 5. MAIN ---
 def main():
     apply_bunker_style()
     with st.sidebar:
         st.markdown("<h2 style='color:#1D1D1F;'>AIH MASTER V32</h2>", unsafe_allow_html=True)
-        st.caption(f"48 ANALIZADORES | NUCLEAR VAULT | {datetime.now().strftime('%H:%M')}")
+        st.caption(f"48 ANALIZADORES | NUCLEAR FORTRESS | {datetime.now().strftime('%H:%M')}")
         st.divider()
-        seleccion = st.radio("Bóveda Total:", MODULOS_48, label_visibility="collapsed")
+        seleccion = st.radio("Bóveda Global:", MODULOS_48, label_visibility="collapsed")
         st.divider()
-        st.markdown("☢️ **Advertencia:** Sensores Nucleares Activos")
+        st.markdown("🛡️ **Blindaje Nivel 6**\n☢️ **Sensores Nucleares: ON**")
 
     if "01" in seleccion:
         render_01_nuclear_radar()
-    elif "41" in seleccion:
-        st.title("41 ☢️ Dosimetría Ionizante")
-        
-        st.metric("Tasa de Dosis Absorbida", "0.12 mSv/y", "Controlado")
     else:
         render_fallback(seleccion)
 
