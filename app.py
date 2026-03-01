@@ -89,4 +89,22 @@ def main():
         st.divider()
         
         # MENÚ DESPLEGADO (Navegación instantánea)
-        seleccion
+        seleccion = st.radio("Dominios de Riesgo:", MODULOS_TOTALES, label_visibility="collapsed")
+        
+        st.divider()
+        st.markdown("🌐 **Nodo:** SP32-Master\n🛡️ **Protocolo:** Inmune")
+
+    # ROUTER DE SEGURIDAD
+    if "01" in seleccion:
+        render_01_cerebro_32()
+    elif "21" in seleccion:
+        st.title("21 🌪️ Ventilación 3D")
+        
+    elif "26" in seleccion:
+        st.title("26 🛰️ Radar de Subsidencia")
+        
+    else:
+        render_fallback(seleccion)
+
+if __name__ == "__main__":
+    main()
