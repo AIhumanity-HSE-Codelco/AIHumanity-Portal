@@ -3,81 +3,50 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine # Para Blindaje de DB M12
 
-# --- 1. CONFIGURACIÓN CORE ---
-st.set_page_config(page_title="AIH MASTER | V20.0 COMPLETE", layout="wide", initial_sidebar_state="expanded")
+# --- 1. CONFIGURACIÓN Y BLINDAJE DE ENTORNO ---
+st.set_page_config(page_title="AIH MASTER | THE VAULT V20.1", layout="wide", initial_sidebar_state="expanded")
 
-def apply_style():
+def apply_blindaje_cupertino():
     st.markdown("""
         <style>
+        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap');
         .stApp { background-color: #F5F5F7; color: #1D1D1F; font-family: 'SF Pro Display', sans-serif; }
-        .report-card { background: #FFFFFF; padding: 20px; border-radius: 15px; border: 1px solid #D2D2D7; border-left: 5px solid #FF3B30; }
-        .sidebar-title { font-size: 1.2em; font-weight: 600; color: #1D1D1F; }
+        div[data-testid="stMetric"] { background-color: #FFFFFF; border: 1px solid #D2D2D7; padding: 20px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .stButton>button { border-radius: 12px; background-color: #0071E3; color: white; border: none; font-weight: 600; width: 100%; height: 3.5em; }
+        .module-card { background: white; padding: 25px; border-radius: 18px; border: 1px solid #D2D2D7; margin-bottom: 20px; }
+        .id-badge { background: #E5E5EA; color: #1D1D1F; padding: 4px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 600; }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 2. NUEVOS MÓDULOS (11, 12, 13) ---
+# --- 2. FUNCIONES DE MÓDULOS BLINDADOS (LÓGICA INMUTABLE) ---
 
-def mod_11_acustica():
-    st.markdown("<h2 style='color:#FF9500;'>11 🔊 CONTAMINACIÓN ACÚSTICA</h2>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Nivel Ruido (Leq)", "82.5 dB(A)", "Límite 85")
-    c2.metric("Dosis Proyectada", "64%", "Normal")
-    c3.metric("Frecuencia Dominante", "125 Hz", "Baja")
-    st.area_chart(np.random.normal(80, 5, 24), color="#FF9500")
+def render_m11_acustica():
+    st.markdown("## <span class='id-badge'>M11</span> 🔊 Higiene Acústica", unsafe_allow_html=True)
+    c1, c2 = st.columns([1, 2])
+    with c1:
+        st.metric("Nivel Sonoro (Leq)", "84.2 dB(A)", "Límite 85", delta_color="inverse")
+        st.info("💡 Exposición máxima permitida: 8.5 horas.")
+    with c2:
+        st.markdown("### **Espectro de Frecuencia (Análisis FFT)**")
+        st.line_chart(np.random.normal(70, 15, 50), color="#FF9500")
+        
 
-def mod_12_mantenimiento():
-    st.markdown("<h2 style='color:#8E8E93;'>12 🛠️ MANTENIMIENTO (CMMS)</h2>", unsafe_allow_html=True)
-    st.write("### Órdenes de Trabajo Activas")
-    data_ot = {
-        "OT ID": ["OT-440", "OT-441"],
-        "Activo": ["Chancador 1", "Bomba 4"],
-        "Prioridad": ["CRÍTICA", "MEDIA"],
-        "Estado": ["En Repuestos", "Programada"]
-    }
-    st.table(pd.DataFrame(data_ot))
+def render_m12_mantenimiento():
+    st.markdown("## <span class='id-badge'>M12</span> 🛠️ Mantenimiento (CMMS)", unsafe_allow_html=True)
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.metric("Disponibilidad Flota", "91.5%", "+0.5%")
+    with col_b:
+        st.metric("MTBF Promedio", "142 hrs", "Estable")
+    
+    st.write("### Backlog de Órdenes de Trabajo (Blindado)")
+    ots = pd.DataFrame({
+        "ID": ["OT-99", "OT-102"], "Activo": ["Faja 04", "Motor 22"], 
+        "Causa": ["Vibración M08", "Consumo M04"], "Prioridad": ["ALTA", "MEDIA"]
+    })
+    st.table(ots)
 
-def mod_13_reportes():
-    st.markdown("<h2 style='color:#0071E3;'>13 📊 REPORTABILIDAD & BI</h2>", unsafe_allow_html=True)
-    st.markdown("""
-        <div class="report-card">
-            <h4>Generar Reporte de Cumplimiento HSE</h4>
-            <p>Periodo: Últimas 24 horas | Nodos: 70,000 | Integridad: 100%</p>
-        </div>
-    """, unsafe_allow_html=True)
-    if st.button("📥 Descargar Reporte PDF"):
-        st.success("Generando reporte inmutable V20.0...")
-
-# --- 3. REINTEGRACIÓN DEL CEREBRO (IRC) ---
-def mod_01_cerebro():
-    st.markdown("## 01 💎 EL CEREBRO (IRC) - V20.0")
-    # Radar de 13 Ejes
-    fig = go.Figure(go.Scatterpolar(
-        r=[40, 30, 25, 60, 20, 30, 15, 45, 10, 70, 35, 20, 10], 
-        theta=['Gases','Bio','Energía','GIS','Sismo','PHM','ADMS','Humano','Clima','Behavior','Ruido','Maint','BI'],
-        fill='toself', line_color='#0071E3'
-    ))
-    fig.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 100])), height=500)
-    st.plotly_chart(fig, use_container_width=True)
-
-# --- 4. NAVEGACIÓN MAESTRA ---
-def main():
-    apply_style()
-    with st.sidebar:
-        st.markdown("<p class='sidebar-title'>AIH MASTER CONTROL</p>", unsafe_allow_html=True)
-        sel = st.selectbox("ENUMERACIÓN DE MÓDULOS (1-13):", [
-            "01 💎 EL CEREBRO", "11 🔊 ACÚSTICA", "12 🛠️ MANTENIMIENTO", "13 📊 REPORTES",
-            "02 💨 GASES", "03 🧬 BIOMETRÍA", "04 ⚡ ENERGÍA", "05 🗺️ GIS", "10 👥 BEHAVIOR"
-        ])
-        st.divider()
-        st.caption(f"V20.0 | FULL BÓVEDA | {datetime.now().strftime('%H:%M')}")
-
-    if sel == "01 💎 EL CEREBRO": mod_01_cerebro()
-    elif sel == "11 🔊 ACÚSTICA": mod_11_acustica()
-    elif sel == "12 🛠️ MANTENIMIENTO": mod_12_mantenimiento()
-    elif sel == "13 📊 REPORTES": mod_13_reportes()
-    else: st.info(f"Módulo {sel} Blindado y Operativo.")
-
-if __name__ == "__main__":
-    main()
+def render_m13_reportes():
+    st.markdown("## <span class='id-badge'>M13</span> 📊 Reportabilidad Legal & BI", unsafe_allow_html=
