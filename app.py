@@ -5,100 +5,66 @@ import plotly.graph_objects as go
 import pydeck as pdk
 from datetime import datetime
 
-# --- 1. CONFIGURACIÓN CORE Y BLINDAJE DE UI ---
-st.set_page_config(page_title="AIH | Master Control V17.1", layout="wide", initial_sidebar_state="expanded")
+# --- 1. CONFIGURACIÓN DE SEGURIDAD Y UI ---
+st.set_page_config(page_title="AIH MASTER | THE VAULT V17.2", layout="wide", initial_sidebar_state="expanded")
 
-def apply_blindaje_cupertino():
+def apply_vault_style():
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap');
         .stApp { background-color: #F5F5F7; color: #1D1D1F; font-family: 'SF Pro Display', sans-serif; }
-        div[data-testid="stMetric"] { background-color: #FFFFFF; border: 1px solid #D2D2D7; padding: 20px; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .stButton>button { border-radius: 10px; background-color: #0071E3; color: white; border: none; font-weight: 600; width: 100%; height: 3em; }
-        .gis-container { border: 1px solid #D2D2D7; border-radius: 15px; overflow: hidden; background: white; }
+        /* Blindaje de Tarjetas */
+        div[data-testid="stMetric"] { background-color: #FFFFFF; border: 1px solid #D2D2D7; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .module-header { color: #0071E3; font-weight: 600; border-bottom: 2px solid #0071E3; margin-bottom: 20px; padding-bottom: 5px; }
+        .stSidebar { background-color: #FFFFFF !important; border-right: 1px solid #D2D2D7; }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 2. MOTOR GEOTÉCNICO BLINDADO (M09 LOGIC) ---
-def calcular_riesgo_talud(desplazamiento, fos):
-    # Lógica inmutable: FoS < 1.2 es Alerta, FoS < 1.1 es Crítico
-    if fos < 1.1 or desplazamiento > 5.0:
-        return "CRÍTICO", "#FF3B30", 50 # Rojo
-    elif fos < 1.3 or desplazamiento > 2.0:
-        return "PRECAUCIÓN", "#FF9500", 20 # Naranja
-    return "ESTABLE", "#34C759", 0 # Verde
-
-# --- 3. COMPONENTES ANALIZADORES (REINTEGRACIÓN TOTAL) ---
-
-def render_gis_blindado():
-    st.markdown("## 🗺️ Módulo 09: GIS y Estabilidad Geotécnica")
+# --- 2. MOTOR DE GOBERNANZA (IRC) ---
+def render_cerebro_v17():
+    st.markdown("<h2 class='module-header'>01 💎 EL CEREBRO: INFERENCIA DE RIESGO</h2>", unsafe_allow_html=True)
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("IRC GLOBAL", "41.8%", "+2.1%")
+    c2.metric("CONECTIVIDAD", "98%", "OPTIMAL")
+    c3.metric("ALERTAS ACTIVAS", "2", "BAJO")
+    c4.metric("TRL LEVEL", "4.2", "STABLE")
     
-    # Simulación de telemetría de campo (AdeepMiners Geotécnicos)
-    desp = 1.2; fos_actual = 1.45
-    status, color_hex, r_geot = calcular_riesgo_talud(desp, fos_actual)
-    
-    g1, g2, g3 = st.columns(3)
-    g1.metric("Desplazamiento (mm)", f"{desp}", "Estable")
-    g2.metric("Factor Seguridad (FoS)", f"{fos_actual}", "Seguro")
-    g3.metric("Estado Estructural", status)
-    
-    st.markdown(f"<div style='height:8px; background-color:{color_hex}; border-radius:4px; margin-bottom:20px;'></div>", unsafe_allow_html=True)
-    
-    c_map, c_data = st.columns([2, 1])
-    with c_map:
-        st.markdown("<div class='gis-container'>", unsafe_allow_html=True)
-        # Capa Satelital 3D con Columnas de Riesgo
-        view = pdk.ViewState(latitude=-34.051, longitude=-70.451, zoom=14, pitch=45)
-        df_puntos = pd.DataFrame({'lat': [-34.051, -34.052], 'lon': [-70.451, -70.452], 'h': [100, 250]})
-        layer = pdk.Layer("ColumnLayer", df_puntos, get_position=["lon", "lat"], get_elevation="h", radius=30, get_fill_color=[0, 113, 227, 200])
-        st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view, map_style='mapbox://styles/mapbox/satellite-v9'))
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with c_data:
-        st.info("📡 Ingesta de Nodos Geotécnicos (ESP32) activa cada 10s.")
-        st.success("✅ No se detectan precursores de Raveling en Sector Norte.")
-
-def render_core_blindado():
-    st.markdown("## 🧠 El Cerebro: Inferencia de Riesgo (IRC)")
-    st.metric("IRC GLOBAL", "38.2%", "Optimizado")
-    st.divider()
-    # Gráfico Radar con los 9 puntos de control
+    st.write("---")
+    # Radar de 9 Ejes (Representación de la Bóveda)
     fig = go.Figure(go.Scatterpolar(
-        r=[20, 30, 15, 45, 25, 10, 20, 35, 15],
+        r=[40, 30, 20, 55, 25, 15, 30, 45, 10],
         theta=['Gases','Bio','Energía','GIS','Sismo','PHM','ADMS','Humano','Clima'],
-        fill='toself', line_color='#0071E3'))
-    fig.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 100])), showlegend=False, height=450)
+        fill='toself', line_color='#0071E3', marker=dict(size=8)
+    ))
+    fig.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 100])), showlegend=False, height=500)
     st.plotly_chart(fig, use_container_width=True)
+    
 
-# --- 4. EJECUCIÓN MAESTRA (NAVEGACIÓN) ---
+# --- 3. FUNCIONES DE MÓDULOS ENUMERADOS ---
+def render_m06_gases():
+    st.markdown("<h2 class='module-header'>02 💨 M06: GASES CRÍTICOS</h2>", unsafe_allow_html=True)
+    st.columns(2)[0].metric("CO (Monóxido)", "14 ppm", "Safe")
+    st.columns(2)[1].metric("O2 (Oxígeno)", "20.9%", "Nominal")
+    
+
+def render_m07_bio():
+    st.markdown("<h2 class='module-header'>03 🧬 M07: BIOMETRÍA & FATIGA</h2>", unsafe_allow_html=True)
+    st.metric("Score Fatiga Promedio", "18%", "Bajo")
+    
+
+def render_m08_energia():
+    st.markdown("<h2 class='module-header'>04 ⚡ M08: ENERGÍA & FLOTA</h2>", unsafe_allow_html=True)
+    st.metric("Carga Flota LHD", "88%", "Sincronizada")
+
+def render_m09_gis():
+    st.markdown("<h2 class='module-header'>05 🗺️ M09: GIS & TALUDES</h2>", unsafe_allow_html=True)
+    st.metric("Estabilidad FoS", "1.42", "Estable")
+    
+
+# --- 4. CONTROL DE NAVEGACIÓN Y DESPLIEGUE ---
 def main():
-    apply_blindaje_cupertino()
+    apply_vault_style()
     
     with st.sidebar:
         st.markdown("### **AIH MASTER CONTROL**")
-        st.image("https://cdn-icons-png.flaticon.com/512/854/854878.png", width=50)
-        sel = st.radio("SISTEMAS BLINDADOS:", [
-            "💎 EL CEREBRO", 
-            "🗺️ GIS TALUDES (M09)",
-            "⚡ ENERGÍA (M08)",
-            "🧬 BIOMETRÍA (M07)", 
-            "💨 GASES (M06)", 
-            "🌪️ ADMS", 
-            "🌍 SISMO", 
-            "⚙️ ACTIVOS"
-        ])
-        st.divider()
-        st.caption(f"V17.1 | Blindaje Inmutable | {datetime.now().strftime('%H:%M')}")
-
-    # Navegador Blindado
-    if sel == "💎 EL CEREBRO": render_core_blindado()
-    elif sel == "🗺️ GIS TALUDES (M09)": render_gis_blindado()
-    elif sel == "⚡ ENERGÍA (M08)": st.info("Módulo Energía Operativo.")
-    elif sel == "🧬 BIOMETRÍA (M07)": st.info("Módulo Biometría Operativo.")
-    elif sel == "💨 GASES (M06)": st.info("Módulo Gases Operativo.")
-    elif sel == "🌪️ ADMS": st.info("Módulo ADMS Operativo.")
-    elif sel == "🌍 SISMO": st.info("Módulo Sismo Operativo.")
-    elif sel == "⚙️ ACTIVOS": st.info("Módulo Activos Operativo.")
-
-if __name__ == "__main__":
-    main()
+        st.image("https://cdn-icons-png.
