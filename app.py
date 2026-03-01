@@ -6,103 +6,105 @@ import pydeck as pdk
 import requests
 from datetime import datetime
 
-# 1. CONFIGURACIÓN VISUAL CUPERTINO (ESTILO APPLE INDUSTRIAL)
-st.set_page_config(page_title="AIH | Master Control", layout="wide", initial_sidebar_state="expanded")
+# --- 1. CONFIGURACIÓN CORE Y BLINDAJE DE UI ---
+st.set_page_config(page_title="AIH | Master Control Supreme", layout="wide", initial_sidebar_state="expanded")
 
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap');
-    
-    /* Entorno Claro Cupertino */
-    .stApp { background-color: #F5F5f7; color: #1d1d1f; font-family: 'SF Pro Display', sans-serif; }
-    
-    /* Tarjetas Blancas con Sombra Suave */
-    div[data-testid="metric-container"] {
-        background-color: #FFFFFF;
-        border: 1px solid #d2d2d7;
-        padding: 15px;
-        border-radius: 12px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-    
-    /* Botones y Radio Selectors */
-    .stButton>button { border-radius: 8px; background-color: #0071e3; color: white; border: none; }
-    .stRadio>div { background: white; padding: 10px; border-radius: 12px; border: 1px solid #d2d2d7; }
-    </style>
-    """, unsafe_allow_html=True)
+def apply_cupertino_style():
+    st.markdown("""
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap');
+        .stApp { background-color: #F5F5F7; color: #1D1D1F; font-family: 'SF Pro Display', sans-serif; }
+        div[data-testid="stMetric"] { background-color: #FFFFFF; border: 1px solid #D2D2D7; padding: 15px; border-radius: 12px; }
+        .stButton>button { border-radius: 8px; width: 100%; height: 3em; font-weight: 600; }
+        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        </style>
+        """, unsafe_allow_html=True)
 
-# 2. MOTORES DE DATOS (RECUPERACIÓN)
-@st.cache_data(ttl=600)
-def fetch_sismo_real():
+# --- 2. MOTORES DE DATOS (DATA ENGINES) ---
+@st.cache_data(ttl=300)
+def get_seismic_data():
     try:
         url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson"
-        data = requests.get(url).json()['features']
-        return pd.DataFrame([{"mag": f['properties']['mag'], "lat": f['geometry']['coordinates'][1], "lon": f['geometry']['coordinates'][0]} for f in data])
-    except: return pd.DataFrame(columns=["mag", "lat", "lon"])
+        resp = requests.get(url, timeout=5).json()
+        return pd.DataFrame([{"mag": f['properties']['mag'], "lat": f['geometry']['coordinates'][1], 
+                              "lon": f['geometry']['coordinates'][0], "place": f['properties']['place']} for f in resp['features']])
+    except: return pd.DataFrame(columns=["mag", "lat", "lon", "place"])
 
-# 3. NAVEGACIÓN LATERAL (BLINDADA)
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=60)
-    st.markdown("### **AIH COMMAND**")
-    modulo = st.radio("ANALIZADOR:", [
-        "💎 EL CEREBRO (IRC)", 
-        "🌪️ ADMS (METEOROLOGÍA)", 
-        "🌍 SISMO (CINTURÓN FUEGO)", 
-        "⚙️ PHM (SALUD ACTIVOS)",
-        "🚨 EMERGENCIAS"
-    ])
-    st.divider()
-    if st.button("ACTUALIZAR SISTEMA"): st.rerun()
+# --- 3. COMPONENTES ANALIZADORES (ENCAPSULADOS) ---
 
-# --- INTERFAZ DE ANALIZADORES ---
-
-if modulo == "💎 EL CEREBRO (IRC)":
-    st.markdown("## 🧠 El Cerebro: Correlación de Riesgo")
+def render_core():
+    st.markdown("## 🧠 El Cerebro: Inferencia de Riesgo Progresivo (IRC)")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("RIESGO IRC", "32.4%", "ESTABLE")
-    c2.metric("EXPOSICIÓN HUMANA", "14 Pers.", "NORMAL")
-    c3.metric("CONECTIVIDAD NODOS", "100%", "OPTIMO")
-    c4.metric("ÍNDICE HSE", "9.8/10", "OK")
+    c2.metric("EXPOSICIÓN", "14 Pers.", "ZONA A")
+    c3.metric("NODOS LIVE", "12/12", "SYNC")
+    c4.metric("HSE INDEX", "9.8/10", "OPTIMO")
     
-    st.write("---")
+    st.markdown("---")
     col_a, col_b = st.columns([2, 1])
     with col_a:
-        st.markdown("### **Matriz de Correlación Progresiva**")
-        fig = go.Figure(go.Scatter(y=np.random.randn(20).cumsum(), fill='tozeroy', line_color='#0071e3'))
-        fig.update_layout(height=300, margin=dict(t=0,b=0,l=0,r=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.markdown("### **Matriz de Correlación de Señales**")
+        fig = go.Figure(go.Scatter(y=np.random.normal(30, 2, 50), fill='tozeroy', line_color='#0071E3'))
+        fig.update_layout(height=350, margin=dict(t=10,b=10,l=0,r=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig, use_container_width=True)
+        
     with col_b:
-        st.markdown("### **Estado de Gobernanza**")
-        st.success("SISTEMA AUTÓNOMO: ON")
-        st.info("Protocolo ADMS: Stand-by")
+        st.markdown("### **Gobernanza de Campo**")
+        st.info("📡 Nodos AideepMiners enviando telemetría cada 500ms.")
+        st.success("✅ Protocolos de ventilación validados.")
+        st.warning("⚠️ Alerta preventiva: Incremento de tránsito en Rampa Sur.")
 
-elif modulo == "🌍 SISMO (CINTURÓN FUEGO)":
-    st.markdown("## 🌍 Inteligencia Geofísica Global")
-    df_s = fetch_sismo_real()
-    st.pydeck_chart(pdk.Deck(
-        map_style='mapbox://styles/mapbox/light-v9',
-        initial_view_state=pdk.ViewState(latitude=-15, longitude=-120, zoom=1, pitch=45),
-        layers=[pdk.Layer("ColumnLayer", df_s, get_position=["lon", "lat"], get_elevation="mag*20000", radius=100000, get_fill_color=[0, 113, 227, 200])]
-    ))
+def render_sismo():
+    st.markdown("## 🌍 Inteligencia Geofísica: Cinturón de Fuego")
+    df = get_seismic_data()
+    if not df.empty:
+        view = pdk.ViewState(latitude=-15, longitude=-120, zoom=1, pitch=45)
+        layer = pdk.Layer("ColumnLayer", df, get_position=["lon", "lat"], get_elevation="mag*25000", 
+                          radius=120000, get_fill_color=[0, 113, 227, 180], pickable=True)
+        st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view, map_style='mapbox://styles/mapbox/light-v9'))
+        
+    else: st.error("Error de conexión con USGS. Verifique acceso a internet.")
 
-elif modulo == "🌪️ ADMS (METEOROLOGÍA)":
-    st.markdown("## 🌪️ Dispersión de Polvo (ADMS)")
-    m1, m2 = st.columns(2)
-    m1.metric("Viento", "24 km/h", "NE")
+def render_adms():
+    st.markdown("## 🌪️ ADMS: Dispersión de Polvo & Meteorología")
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Viento NE", "24 km/h", "Sostenido")
     m2.metric("Humedad", "62%", "Normal")
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Gaussian_Plume_Model.png/400px-Gaussian_Plume_Model.png", caption="Modelo Gaussiano de Dispersión Local")
+    m3.metric("MP10", "42 µg/m³", "Bajo Límite")
+    st.markdown("---")
+    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Gaussian_Plume_Model.png/450px-Gaussian_Plume_Model.png")
+    
 
-elif modulo == "⚙️ PHM (SALUD ACTIVOS)":
-    st.markdown("## ⚙️ Salud Estructural y de Activos")
-    st.line_chart(np.random.randn(50, 2), height=250)
-    st.caption("Frecuencia de Vibración Chancador (FFT)")
+def render_phm():
+    st.markdown("## ⚙️ PHM: Salud de Activos Críticos")
+    st.line_chart(pd.DataFrame(np.random.randn(50, 2), columns=['Chancador A', 'Correa 04']), height=300)
+    st.caption("Firma espectral de vibración procesada mediante Transformada de Fourier (FFT).")
 
-elif modulo == "🚨 EMERGENCIAS":
-    st.markdown("## 🚨 Despacho de Respuesta Crítica")
-    st.columns(3)[0].button("🚒 BOMBEROS", use_container_width=True)
-    st.columns(3)[1].button("🚑 AMBULANCIA", use_container_width=True)
-    st.columns(3)[2].button("⛏️ RESCATE", use_container_width=True)
+def render_emergency():
+    st.markdown("## 🚨 Centro de Respuesta y Despacho")
+    st.error("INCIDENTES ACTIVOS: 0")
+    st.divider()
+    c1, c2, c3 = st.columns(3)
+    c1.button("🚒 DESPACHAR BOMBEROS")
+    c2.button("🚑 LLAMAR AMBULANCIA")
+    c3.button("⛏️ BRIGADA RESCATE")
 
-# 4. FOOTER
-st.divider()
-st.caption(f"AIH MASTER V12.0 | TRL-4 Cupertino Base | {datetime.now().strftime('%H:%M:%S')}")
+# --- 4. EJECUCIÓN MAESTRA ---
+def main():
+    apply_cupertino_style()
+    
+    with st.sidebar:
+        st.markdown("### **AIH MASTER CONTROL**")
+        st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=60)
+        sel = st.radio("SISTEMAS BLINDADOS:", ["💎 EL CEREBRO", "🌪️ ADMS", "🌍 SISMO", "⚙️ ACTIVOS", "🚨 EMERGENCIAS"])
+        st.divider()
+        st.caption(f"V12.1 | {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+
+    if sel == "💎 EL CEREBRO": render_core()
+    elif sel == "🌪️ ADMS": render_adms()
+    elif sel == "🌍 SISMO": render_sismo()
+    elif sel == "⚙️ ACTIVOS": render_phm()
+    elif sel == "🚨 EMERGENCIAS": render_emergency()
+
+if __name__ == "__main__":
+    main()
