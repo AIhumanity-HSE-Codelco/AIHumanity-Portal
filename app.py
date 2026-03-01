@@ -4,8 +4,8 @@ import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
 
-# --- 1. CONFIGURACIÓN DE NÚCLEO INMUNE ---
-st.set_page_config(page_title="AIH MASTER | BÚNKER V32.1", layout="wide")
+# --- 1. CONFIGURACIÓN INMUTABLE V33 ---
+st.set_page_config(page_title="AIH MASTER | COMM FORTRESS V33", layout="wide")
 
 # --- 2. BLINDAJE VISUAL ATÓMICO (CUPERTINO WHITE) ---
 def apply_bunker_style():
@@ -16,19 +16,17 @@ def apply_bunker_style():
         div[data-testid="stMetric"] { 
             background-color: #FFFFFF !important; 
             border: 1px solid #D2D2D7 !important; 
-            padding: 20px !important; 
-            border-radius: 18px !important;
+            padding: 18px !important; 
+            border-radius: 15px !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
         }
         h1, h2, h3 { color: #1D1D1F !important; font-weight: 600 !important; }
-        .stRadio > label { font-size: 0.85em !important; font-weight: 700 !important; color: #86868B !important; margin-bottom: 8px !important; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #D2D2D7; border-radius: 10px; }
+        .stRadio > label { font-size: 0.85em !important; font-weight: 700 !important; color: #86868B !important; }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 3. LISTA MAESTRA DEFINITIVA (48 ANALIZADORES) ---
-MODULOS_48 = [
+# --- 3. LISTA MAESTRA DEFINITIVA (56 ANALIZADORES) ---
+MODULOS_56 = [
     "01 💎 EL CEREBRO (IRC)", "02 💨 GASES (M06)", "03 🧬 BIOMETRÍA", "04 ⚡ ENERGÍA", 
     "05 🗺️ GIS/TALUDES", "06 🌪️ ADMS/POLVO", "07 🌍 SISMO", "08 ⚙️ ACTIVOS", 
     "09 🚨 EMERGENCIAS", "10 👥 BEHAVIOR", "11 🔊 ACÚSTICA", "12 🛠️ MANTENIMIENTO", 
@@ -40,61 +38,59 @@ MODULOS_48 = [
     "33 🛡️ CIBERSEGURIDAD", "34 🔋 MICRO-REDES", "35 🧬 EPIGENÉTICA", "36 📉 FRAGMENTACIÓN", 
     "37 🕊️ COMUNIDADES", "38 ♻️ ECONOMÍA CIRCULAR", "39 🤖 FLOTA AUTÓNOMA", "40 🔮 ESCENARIOS 4D",
     "41 ☢️ DOSIMETRÍA IONIZANTE", "42 🌫️ GAS RADÓN", "43 🧪 ESPECTROMETRÍA XRF", "44 💧 HIDROQUÍMICA", 
-    "45 🧬 BIO-LIXIVIACIÓN", "46 🌋 VAPOR MERCURIO", "47 💨 QUÍMICA AIRE", "48 🧪 REACTIVOS"
+    "45 🧬 BIO-LIXIVIACIÓN", "46 🌋 VAPOR MERCURIO", "47 💨 QUÍMICA AIRE", "48 🧪 REACTIVOS",
+    # --- CAPA DE COMUNICACIONES (M49-M56) ---
+    "49 🛰️ SATELITAL LEO", "50 📻 RADIO VHF/UHF", "51 🌐 TRAFFIC INSPECTOR", "52 📶 5G PRIVATE",
+    "53 🕸️ MESH HEALTH", "54 🛡️ FIREWALL OT", "55 🔌 POWERLINE PLC", "56 📉 QoS/LATENCIA"
 ]
 
-# --- 4. MOTOR DE GOBERNANZA ---
+# --- 4. MOTOR DE GOBERNANZA DE RED ---
 
-def render_01_nuclear_radar():
-    st.title("01 💎 Cerebro Forense (IRC-48)")
-    st.write("### Integración de Riesgos Físicos, Químicos y Nucleares")
+def render_01_comm_radar():
+    st.title("01 💎 Cerebro de Riesgo y Conectividad (IRC-56)")
+    etiquetas = [m[:6] for m in MODULOS_56]
+    valores = np.random.randint(20, 90, 56)
     
-    etiquetas = [m[:6] for m in MODULOS_48]
-    valores = np.random.randint(10, 80, 48)
-    
-    fig = go.Figure(go.Scatterpolar(
-        r=valores, theta=etiquetas, fill='toself', 
-        line_color='#FF3B30', fillcolor='rgba(255, 59, 48, 0.05)' 
-    ))
-    fig.update_layout(
-        polar=dict(radialaxis=dict(visible=False), angularaxis=dict(gridcolor="#E5E5E5", tickfont=dict(size=6))),
-        paper_bgcolor='rgba(0,0,0,0)', height=850
-    )
+    fig = go.Figure(go.Scatterpolar(r=valores, theta=etiquetas, fill='toself', line_color='#0071E3', fillcolor='rgba(0,113,227,0.06)'))
+    fig.update_layout(polar=dict(radialaxis=dict(visible=False), angularaxis=dict(gridcolor="#E5E5E5", tickfont=dict(size=5))), height=900)
     st.plotly_chart(fig, use_container_width=True)
     
+    
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("IRC AGREGADO", f"{valores.mean():.1f}%", "Nominal")
-    c2.metric("TRAZAS RADIACTIVAS", "Bajas", "Controlado")
-    c3.metric("ESTABILIDAD PH", "7.1", "Estable")
-    c4.metric("NODOS SINC", "70,000", "Sync")
+    c1.metric("ESTADO DE RED", "99.98%", "Estable")
+    c2.metric("TRAFICO MQTT", "1.2 TB/día", "+5%")
+    c3.metric("LATENCIA MEDIA", "22ms", "Baja")
+    c4.metric("NODOS MESH", "70,000", "Sync")
 
-def render_fallback(nombre):
+def render_traffic_analyser(nombre):
     st.title(nombre)
     st.markdown("---")
     c1, c2 = st.columns([2, 1])
     with c1:
-        st.write("### Telemetría Crítica")
-        color = "#FF3B30" if any(x in nombre for x in ["☢️", "🧪", "🌋"]) else "#0071E3"
-        st.line_chart(np.random.normal(50, 10, 24), color=color)
+        st.write("### Análisis de Paquetes y Ancho de Banda")
+        st.area_chart(np.random.normal(100, 20, 24), color="#34C759")
     with c2:
-        st.metric("Estado", "OPERATIVO", "Sync")
-        st.info(f"Analizador {nombre} blindado. TRL-4+.")
+        st.metric("Protocolo", "MQTT/gRPC", "Seguro")
+        st.metric("Carga de CPU Nodos", "14%", "Óptima")
+        st.info(f"Monitorización de tráfico {nombre} activa en tiempo real.")
 
 # --- 5. MAIN ---
 def main():
     apply_bunker_style()
     with st.sidebar:
-        st.markdown("<h2 style='color:#1D1D1F;'>AIH MASTER V32</h2>", unsafe_allow_html=True)
-        st.caption(f"48 ANALIZADORES | NUCLEAR FORTRESS | {datetime.now().strftime('%H:%M')}")
+        st.markdown("<h2 style='color:#1D1D1F;'>AIH MASTER V33</h2>", unsafe_allow_html=True)
+        st.caption(f"56 ANALIZADORES | COMM FORTRESS | {datetime.now().strftime('%H:%M')}")
         st.divider()
-        seleccion = st.radio("Bóveda Global:", MODULOS_48, label_visibility="collapsed")
+        seleccion = st.radio("Bóveda Global:", MODULOS_56, label_visibility="collapsed")
         st.divider()
-        st.markdown("🛡️ **Blindaje Nivel 6**\n☢️ **Sensores Nucleares: ON**")
+        st.markdown("🌐 **Enlace Satelital:** Activo\n📡 **Red 5G:** Sincronizada")
 
-    if "01" in seleccion:
-        render_01_nuclear_radar()
-    else:
-        render_fallback(seleccion)
+    if "01" in seleccion: render_01_comm_radar()
+    elif "53" in seleccion:
+        st.title("53 🕸️ Mesh Health (ESP32 Nodes)")
+        
+        st.success("Topología Mesh estable con redundancia de 3 saltos.")
+    else: render_traffic_analyser(seleccion)
 
 if __name__ == "__main__":
     main()
