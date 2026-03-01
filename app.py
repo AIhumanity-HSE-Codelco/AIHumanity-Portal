@@ -1,52 +1,40 @@
 import streamlit as st
 import requests
 import pandas as pd
+import time
 from datetime import datetime
 
-# Configuración de Identidad AIH-Master
-st.set_page_config(page_title="AIHumanity Master | HSE", layout="wide")
+st.title("🛡️ AIHumanity Master | Monitor de Ondas HSE")
 
-st.markdown("### 🛡️ Centro de Control de Riesgo Preventivo (ICR)")
-st.write(f"**Arquitecto Jefe:** Activa Identidad AIH-Master | **Nodo:** ESP32-Telenet")
+# Contenedor para el gráfico de flujo
+if 'historico' not in st.session_state:
+    st.session_state.historico = pd.DataFrame(columns=['Hora', 'Luz', 'Temp'])
 
-URL_BASE = "https://aihumanity-hse-3a7eb-default-rtdb.firebaseio.com/nodo1.json"
+URL = "https://aihumanity-hse-3a7eb-default-rtdb.firebaseio.com/nodo1.json"
 
-# Función de extracción de datos
-def fetch_data():
+def update():
     try:
-        response = requests.get(URL_BASE)
-        return response.json()
+        data = requests.get(URL).json()
+        if data:
+            # Añadir a la serie de tiempo para el gráfico de ondas
+            nueva_fila = {'Hora': datetime.now(), 'Luz': data['luz'], 'Temp': data['temp']}
+            st.session_state.historico = pd.concat([st.session_state.historico, pd.DataFrame([nueva_fila])]).tail(20)
+            
+            # Métricas en tiempo real
+            c1, c2 = st.columns(2)
+            c1.metric("LUZ (Sensor Real)", data['luz'])
+            c2.metric("HORA SINCRONIZADA", data.get('hora', 'Error NTP'))
+
+            # GRÁFICO DE ONDAS (FLUJO DE DATOS)
+            st.subheader("📈 Flujo de Datos de Sensores (Ondas)")
+            st.line_chart(st.session_state.historico.set_index('Hora')[['Luz']])
+            
+            # ANALISIS IA
+            if data['luz'] < 100:
+                st.warning("⚠️ ANALISIS IA: Baja visibilidad detectada en Nodo 1. Riesgo de incidente elevado.")
     except:
-        return None
+        st.error("Perdida de conexión con el flujo de datos.")
 
-data = fetch_data()
-
-if data:
-    # Contenedores de métricas dinámicas
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric(label="🌡️ Temperatura Mina", value=f"{data['temp']} °C", delta="Normal")
-    
-    with col2:
-        st.metric(label="💡 Nivel de Polvo/Luz", value=f"{data['luz']} lx")
-        
-    with col3:
-        estado = "✅ SEGURO" if data['puesto'] else "🚨 ALERTA EPP"
-        st.subheader(f"Estatus: {estado}")
-
-    # Simulación de tendencia (Análisis Predictivo)
-    st.divider()
-    st.info(f"Última sincronización: {datetime.now().strftime('%H:%M:%S')}")
-    
-    # Botón de actualización forzada si es necesario
-    if st.button('Sincronizar Nodo Ahora'):
-        st.rerun()
-else:
-    st.error("Esperando flujo de datos desde la red Telenet...")
-
-# Refresco automático cada 5 segundos (Interacción real)
-st.empty()
-import time
-time.sleep(5)
+update()
+time.sleep(1)
 st.rerun()
