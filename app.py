@@ -5,108 +5,105 @@ import plotly.graph_objects as go
 from datetime import datetime
 import time
 
-# 1. CONFIGURACIÓN DE ESCENARIO
-st.set_page_config(page_title="AIH | El Teniente HSE", layout="wide", initial_sidebar_state="collapsed")
+# 1. SETUP CUPERTINO INDUSTRIAL
+st.set_page_config(page_title="AIH | Trazabilidad Teniente", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. INYECCIÓN DE ESTILO PROFESIONAL (CSS PREMIUM)
+# 2. CSS DE ALTO IMPACTO (APPLE WHITE + STATUS COLORS)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-    
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color: #F0F2F5; }
-    
-    /* Contenedores Tipo Apple */
-    .metric-card {
-        background: white;
-        padding: 24px;
-        border-radius: 24px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        border: 1px solid rgba(0,0,0,0.02);
-        text-align: center;
-    }
-    
-    /* Header Flotante */
-    .main-header {
-        background: linear-gradient(90deg, #5E5CE6, #30D158);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 800;
-        font-size: 2.5rem;
-        text-align: center;
-        margin-bottom: 0px;
-    }
-    
-    /* Botón de Emergencia */
-    .stButton>button {
-        width: 100%;
-        border-radius: 15px;
-        height: 50px;
-        background: #FF3B30;
-        color: white;
-        border: none;
-        font-weight: bold;
-    }
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color: #F8F9FA; }
+    .stApp { background-color: #F8F9FA; }
+    .card-trazabilidad { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid #5E5CE6; margin-bottom: 15px; }
+    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; color: white; }
+    .bg-safe { background-color: #30D158; }
+    .bg-warning { background-color: #FF9500; }
+    .bg-danger { background-color: #FF3B30; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. LÓGICA DE TELEMETRÍA (SIMULACIÓN FLUIDA)
-if 'step' not in st.session_state: st.session_state.step = 0
-st.session_state.step += 1
+# 3. HEADER OPERATIVO
+t1, t2 = st.columns([3, 1])
+with t1:
+    st.markdown("<h1 style='color:#1D1D1F; margin:0;'>🛡️ AIHUMANITY | CONTROL DE PERSONAL</h1>", unsafe_allow_html=True)
+    st.caption(f"📍 EL TENIENTE - NIVEL RESERVA | {datetime.now().strftime('%H:%M:%S')} CLT")
+with t2:
+    st.button("📥 GENERAR REPORTE TRAZABILIDAD")
 
-# Generación de datos con "Inercia" (No saltan feo)
-val_mp10 = 35 + (np.sin(st.session_state.step * 0.2) * 8)
-val_risk = 40 + (np.cos(st.session_state.step * 0.2) * 12)
+st.divider()
 
-# 4. CUERPO DEL DASHBOARD
-st.markdown("<h1 class='main-header'>AIHUMANITY CORE</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#8E8E93;'>CENTRO DE INTELIGENCIA PREVENTIVA - EL TENIENTE</p>", unsafe_allow_html=True)
+# 4. DASHBOARD DE TRAZABILIDAD Y CHECKEO
+col_personal, col_radar, col_check = st.columns([1.2, 1.5, 1.2])
 
-# Fila 1: Indicadores Críticos
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    st.markdown(f"<div class='metric-card'><p style='color:#8E8E93; font-weight:600;'>META CERO</p><h2 style='color:#30D158;'>{round(100-val_risk,1)}%</h2></div>", unsafe_allow_html=True)
-with c2:
-    st.markdown(f"<div class='metric-card'><p style='color:#8E8E93; font-weight:600;'>MP10 (POLVO)</p><h2 style='color:#5E5CE6;'>{round(val_mp10,1)}</h2></div>", unsafe_allow_html=True)
-with c3:
-    st.markdown(f"<div class='metric-card'><p style='color:#8E8E93; font-weight:600;'>VIENTO</p><h2 style='color:#1D1D1F;'>14 <small>km/h</small></h2></div>", unsafe_allow_html=True)
-with c4:
-    st.markdown(f"<div class='metric-card'><p style='color:#8E8E93; font-weight:600;'>ESTATUS</p><h2 style='color:#30D158;'>OK</h2></div>", unsafe_allow_html=True)
-
-st.write("") # Espaciador
-
-# Fila 2: Radar y Alertas
-col_radar, col_side = st.columns([2, 1])
-
-with col_radar:
-    # RADAR CHART PROFESIONAL
-    fig = go.Figure()
-    fig.add_trace(go.Scatterpolar(
-        r=[val_mp10, val_risk, 20, 15, 25],
-        theta=['Polvo', 'Geomecánica', 'Gases', 'Viento', 'Tránsito'],
-        fill='toself',
-        fillcolor='rgba(94, 92, 230, 0.2)',
-        line=dict(color='#5E5CE6', width=4)
-    ))
-    fig.update_layout(
-        polar=dict(radialaxis=dict(visible=True, range=[0, 100], gridcolor="#EEE")),
-        showlegend=False,
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(t=40, b=40)
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-with col_side:
-    st.markdown("### 🚨 Panel de Control")
-    st.info("**ADEEPMINERS:** 8 Nodos en línea")
-    st.warning("**CLIMA:** Dispersión sector Sur estable")
-    st.write("---")
-    if st.button("STOP-WORK AUTHORITY"):
-        st.error("PROCEDIMIENTO INICIADO")
+# --- COLUMNA 1: TRAZABILIDAD DE PERSONAL (QUIÉN ESTÁ DENTRO) ---
+with col_personal:
+    st.subheader("👥 Trazabilidad en Tiempo Real")
     
-    # Reloj Regional
-    st.markdown(f"**Hora Local:** {datetime.now().strftime('%H:%M:%S')}")
+    # Simulación de Personal en Faena
+    personal = [
+        {"nombre": "Juan Pérez", "zona": "Galería N-4", "status": "Seguro", "color": "bg-safe"},
+        {"nombre": "Carlos Ruiz", "zona": "Chancado P-1", "status": "Alerta MP10", "color": "bg-warning"},
+        {"nombre": "Luis Mora", "zona": "Sector Alpha", "status": "Sin Check", "color": "bg-danger"},
+    ]
+    
+    for p in personal:
+        st.markdown(f"""
+        <div class="card-trazabilidad">
+            <div style="display:flex; justify-content:space-between;">
+                <b>{p['nombre']}</b>
+                <span class="status-badge {p['color']}">{p['status']}</span>
+            </div>
+            <p style="margin:5px 0 0 0; font-size:0.85rem; color:grey;">📍 Ubicación: {p['zona']}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-# 5. REFRESCO AUTOMÁTICO (ANIMACIÓN)
-time.sleep(1.2)
-st.rerun()
+# --- COLUMNA 2: RADAR DE RIESGO INTEGRADO (HOMBRE + AMBIENTE) ---
+with col_radar:
+    st.markdown("<p style='text-align:center; font-weight:bold;'>ÍNDICE DE RIESGO OPERATIVO (IRO)</p>", unsafe_allow_html=True)
+    
+    fig = go.Figure()
+    # Ejes: Polvo, Gases, Fatiga Humana, Cumplimiento Protocolo, Estabilidad
+    fig.add_trace(go.Scatterpolar(
+        r=[45, 20, 30, 85, 95],
+        theta=['MP10', 'Gases', 'Fatiga (Bio)', 'Protocolos', 'Talud'],
+        fill='toself', fillcolor='rgba(94, 92, 230, 0.2)', line=dict(color='#5E5CE6', width=3)
+    ))
+    fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False, height=400, margin=dict(t=20, b=20))
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.info("**ANÁLISIS PREDICTIVO:** El riesgo aumenta en Galería N-4 por baja ventilación.")
+
+# --- COLUMNA 3: CHECKEO DIGITAL HSE (CONTROL DE ACCESO) ---
+with col_check:
+    st.subheader("📝 Checkeo Preventivo")
+    with st.expander("✅ CONTROL DE ACCESO TURNO B", expanded=True):
+        st.checkbox("Uso de Respirador N95/N100", value=True)
+        st.checkbox("Lámpara Minera Operativa", value=True)
+        st.checkbox("Auto-Rescatador vigente", value=True)
+        st.checkbox("Charla de 5 min realizada", value=False)
+        
+        if st.button("FINALIZAR CHECKEO"):
+            st.success("Personal Habilitado")
+
+    st.divider()
+    st.subheader("📊 Metas Cero")
+    st.metric("Meta Cero Mensual", "92%", "+1.2%")
+    st.progress(0.92)
+
+# 5. GEOLOCALIZACIÓN DE ADEEPMINERS (MAPA DE CALOR)
+st.write("### 📍 Geolocalización y Cobertura de Nodos")
+# Generamos puntos aleatorios simulando nodos en las galerías
+map_data = pd.DataFrame(
+    np.random.randn(10, 2) / [200, 200] + [-34.05, -70.45],
+    columns=['lat', 'lon']
+)
+st.map(map_data)
+
+# 6. FOOTER Y BOTÓN CRÍTICO
+st.divider()
+c_f1, c_f2 = st.columns([3, 1])
+with c_f1:
+    st.caption("AIHumanity v4.2 | Sistema Integrado de Trazabilidad, Sensores y Checkeo HSE | El Teniente 2026")
+with c_f2:
+    if st.button("🚨 STOP-WORK AUTHORITY"):
+        st.error("Protocolo de Detención Activado")
