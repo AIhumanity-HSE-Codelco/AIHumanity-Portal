@@ -4,144 +4,130 @@ import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
 
-# --- 1. NÚCLEO INMUNE V44 (CONFIGURACIÓN DE PODER) ---
-st.set_page_config(page_title="AIH MASTER | BÓVEDA 80", layout="wide", initial_sidebar_state="expanded")
+# --- 1. CONFIGURACIÓN DE NÚCLEO INMUNE ---
+st.set_page_config(page_title="AIH CORE-BRAIN V45", layout="wide", initial_sidebar_state="expanded")
 
-# --- 2. BLINDAJE VISUAL: INTERFAZ INDUSTRIAL XL ---
+# --- 2. BLINDAJE VISUAL: INTERFAZ DE GOBIERNO XL ---
 def apply_bunker_ui():
     st.markdown("""
         <style>
-        /* Fondo Blanco Cupertino e Inyectores de Fuente */
         .stApp { background-color: #FFFFFF; color: #1D1D1F; font-family: -apple-system, sans-serif; }
+        section[data-testid="stSidebar"] { background-color: #F5F5F7; border-right: 2px solid #D2D2D7; width: 450px !important; }
         
-        /* Sidebar Blindado: Ancho Fijo y Scroll Visible */
-        section[data-testid="stSidebar"] { 
-            background-color: #F5F5F7; 
-            border-right: 2px solid #D2D2D7; 
-            width: 550px !important; 
-        }
-        
-        /* Analizadores en Columna: Texto XL y Espaciado de Seguridad */
+        /* Analizadores Izquierda XL */
         .stRadio div[role="radiogroup"] label {
-            font-size: 1.5rem !important; /* Visibilidad Máxima */
-            font-weight: 700 !important;
-            padding: 15px 10px !important;
-            color: #1D1D1F !important;
-            border-bottom: 1px solid #E5E5E7;
-            cursor: pointer;
+            font-size: 1.2rem !important; font-weight: 600; padding: 12px 10px !important;
+            color: #1D1D1F !important; border-bottom: 1px solid #E5E5E7;
         }
         
-        /* Hover Efecto para Operador */
-        .stRadio div[role="radiogroup"] label:hover { background-color: #E8E8ED; border-radius: 8px; }
-
-        /* Títulos de Mando */
-        h1 { font-size: 3.8rem !important; font-weight: 800; letter-spacing: -0.06em; color: #1D1D1F; }
-        h3 { font-size: 2.2rem !important; color: #86868B; font-weight: 400; }
-        
-        /* Métricas de Cristal (Cupertino) */
-        div[data-testid="stMetric"] { 
-            background-color: #FFFFFF; border: 2px solid #D2D2D7; 
-            border-radius: 28px; padding: 35px; 
-            box-shadow: 0 12px 40px rgba(0,0,0,0.06); 
+        /* Panel Central de Decisiones */
+        .decision-card {
+            background-color: #FBFBFD; border: 2px solid #0071E3; border-radius: 24px;
+            padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,113,227,0.1);
         }
-        div[data-testid="stMetricValue"] { font-size: 3.5rem !important; font-weight: 800 !important; color: #0071E3 !important; }
-        div[data-testid="stMetricLabel"] { font-size: 1.3rem !important; text-transform: uppercase; color: #86868B; }
+        .hazard-text { color: #FF3B30; font-weight: 700; font-size: 1.5rem; }
+        .action-text { color: #34C759; font-weight: 600; font-size: 1.2rem; }
+        
+        /* Métricas de Inferencia */
+        div[data-testid="stMetricValue"] { font-size: 3.5rem !important; font-weight: 800 !important; }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 3. DICCIONARIO DE IDENTIDAD INMUTABLE (80 ANALIZADORES) ---
-# Esta es la Bóveda Sella del 01 al 80. No se puede corromper.
-BOVEDA_80 = {
-    "01": "💎 EL CEREBRO (IRC-80)", "02": "💨 GASES (M06)", "03": "🧬 BIOMETRÍA", "04": "⚡ ENERGÍA",
-    "05": "🗺️ GIS / TALUDES", "06": "🌪️ ADMS / POLVO", "07": "🌍 SISMO", "08": "⚙️ ACTIVOS",
-    "09": "🚨 EMERGENCIAS", "10": "👥 BEHAVIOR", "11": "🔊 ACÚSTICA", "12": "🛠️ MANTENIMIENTO",
-    "13": "📊 REPORTES BI", "14": "👁️ OCULOMETRÍA", "15": "🧠 CARGA COGNITIVA", "16": "🌡️ ESTRÉS TÉRMICO",
-    "17": "📝 INCIDENTES", "18": "📉 CAUSA RAÍZ", "19": "⚖️ AUDITORÍA", "20": "📢 NOTIFICACIONES",
-    "21": "🌪️ VENTILACIÓN 3D", "22": "🚜 COLISIÓN H-M", "23": "📦 STOCKPILES", "24": "⚡ CALIDAD ENERGÍA",
-    "25": "📡 MESH STATUS", "26": "🛰️ RADAR SUBSIDENCIA", "27": "🚒 SUPRESIÓN INCENDIO", "28": "👷 ROCKBURST",
-    "29": "🚛 FATIGA ACTIVOS", "30": "☁️ INVERSIÓN TÉRMICA", "31": "🛤️ CONTROL LHD", "32": "🌊 GESTIÓN RELAVES",
-    "33": "🛡️ CIBERSEGURIDAD", "34": "🔋 MICRO-REDES", "35": "🧬 EPIGENÉTICA", "36": "📉 FRAGMENTACIÓN",
-    "37": "🕊️ COMUNIDADES", "38": "♻️ ECONOMÍA CIRCULAR", "39": "🤖 FLOTA AUTÓNOMA", "40": "🔮 ESCENARIOS 4D",
-    "41": "☢️ DOSIMETRÍA", "42": "🌫️ GAS RADÓN", "43": "🧪 ESPECTROMETRÍA XRF", "44": "💧 HIDROQUÍMICA",
-    "45": "🧬 BIO-LIXIVIACIÓN", "46": "🌋 VAPOR MERCURIO", "47": "💨 QUÍMICA AIRE", "48": "🧪 REACTIVOS",
-    "49": "🛰️ SATELITAL LEO", "50": "📻 RADIO VHF/UHF", "51": "🌐 TRAFFIC INSPECTOR", "52": "📶 5G PRIVATE",
-    "53": "🕸️ MESH HEALTH", "54": "🛡️ FIREWALL OT", "55": "🔌 POWERLINE PLC", "56": "📉 QoS/LATENCIA",
-    "57": "🛰️ GNSS RTK", "58": "🚁 UTM TRAFFIC", "59": "🛡️ ANTI-DRONE", "60": "📡 RADAR METEO",
-    "61": "🛰️ InSAR SPACE", "62": "🔦 LiDAR MAPPING", "63": "🛡️ ADS-B AIRSPACE", "64": "🌌 SPACE WEATHER",
-    "65": "🌡️ GRADIENTE GEOTÉRMICO", "66": "🕸️ MICRO-SISMICIDAD", "67": "🧪 ISÓTOPOS AGUA", "68": "🦠 MICROBIOLOGÍA",
-    "69": "📢 PSICO-ACÚSTICA", "70": "📉 VOLATILIDAD", "71": "❄️ CRIÓSFERA", "72": "🛰️ ALBEDO",
-    "73": "⛓️ TENSIÓN CABLES", "74": "⚡ CAMPOS EM", "75": "🌪️ PLUMA TRONADURA", "76": "🧠 FATIGA MATERIALES",
-    "77": "🚢 LOGÍSTICA", "78": "⚖️ COMPLIANCE", "79": "🛡️ DEEP-FAKE DEFENSE", "80": "♾️ ENTROPÍA"
-}
+# --- 3. BÓVEDA ESTÁTICA 01-80 ---
+BOVEDA_80 = {f"{str(i).zfill(2)}": f"ANALIZADOR {str(i).zfill(2)}" for i in range(1, 81)}
+# Nombres críticos para lógica de cruce
+BOVEDA_80.update({
+    "01": "💎 EL CEREBRO (IRC-80)", "02": "💨 GASES (M06)", "03": "🧬 BIOMETRÍA", "05": "🗺️ GIS / TALUDES",
+    "07": "🌍 SISMO", "21": "🌪️ VENTILACIÓN 3D", "22": "🚜 COLISIÓN H-M", "26": "🛰️ RADAR SUBSIDENCIA",
+    "57": "🛰️ GNSS RTK", "80": "♾️ ENTROPÍA"
+})
 
-# --- 4. MOTOR DE RENDERIZADO IRC-80 (BLINDADO) ---
-def render_master_radar(data_points):
-    ids = list(BOVEDA_80.keys())
+# --- 4. MOTOR DE INFERENCIA (LÓGICA DE CRUCE) ---
+def analyze_risks(data):
+    alerts = []
+    # Simulación de Cruce 1: Gas + Ventilación
+    if data[1] > 70 and data[20] < 40:
+        alerts.append({"tipo": "CRÍTICO", "msg": "ALTA CONCENTRACIÓN GAS + FALLA VENTILACIÓN", "icon": "🚨", "color": "#FF3B30"})
     
-    # Gráfica Radar de Alta Resolución
-    fig = go.Figure(go.Scatterpolar(
-        r=np.append(data_points, data_points[0]),
-        theta=np.append(ids, ids[0]),
-        fill='toself',
-        line=dict(color='#0071E3', width=4),
-        fillcolor='rgba(0, 113, 227, 0.15)',
-        hoverinfo='r+theta'
-    ))
+    # Simulación de Cruce 2: Sismo + Talud
+    if data[6] > 65 and data[25] > 60:
+        alerts.append({"tipo": "AVISO", "msg": "ACTIVIDAD SÍSMICA CON DEFORMACIÓN DE TALUD", "icon": "⚠️", "color": "#FF9500"})
     
-    fig.update_layout(
-        polar=dict(
-            bgcolor="white",
-            radialaxis=dict(visible=True, range=[0, 100], gridcolor="#F0F0F2", tickfont=dict(size=14, color="#86868B")),
-            angularaxis=dict(gridcolor="#F0F0F2", tickfont=dict(size=11, color="#1D1D1F", fontfamily="monospace"))
-        ),
-        paper_bgcolor='white', height=950,
-        margin=dict(t=100, b=100, l=100, r=100)
-    )
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-    
+    # Simulación de Cruce 3: Biometría + Proximidad
+    if data[2] > 75 and data[21] > 70:
+        alerts.append({"tipo": "PREVENTIVO", "msg": "FATIGA DETECTADA EN ZONA DE TRÁNSITO PESADO", "icon": "👷", "color": "#0071E3"})
+        
+    return alerts
 
-# --- 5. LOGICA DE CONTROL Y DESPLIEGUE ---
+# --- 5. RENDERIZADO CENTRAL ---
+def render_core_brain():
+    st.title("💎 Gobernanza AIH-Master")
+    st.subheader("Orquestador de Decisiones en Tiempo Real")
+    
+    # Datos de los 80 (Sincronizados)
+    np.random.seed(99)
+    current_data = st.session_state.get('live_data', np.random.randint(10, 95, 80))
+    
+    # Layout Central: Radar e Inferencias
+    col_graph, col_logic = st.columns([1.5, 1])
+    
+    with col_graph:
+        ids = list(BOVEDA_80.keys())
+        fig = go.Figure(go.Scatterpolar(
+            r=np.append(current_data, current_data[0]),
+            theta=np.append(ids, ids[0]),
+            fill='toself', line=dict(color='#0071E3', width=3),
+            fillcolor='rgba(0, 113, 227, 0.1)'
+        ))
+        fig.update_layout(polar=dict(radialaxis=dict(visible=False), angularaxis=dict(tickfont=dict(size=8))),
+                          height=700, margin=dict(t=20, b=20, l=20, r=20))
+        st.plotly_chart(fig, use_container_width=True)
+        
+
+    with col_logic:
+        st.markdown("### 🧠 Inferencias del Cerebro")
+        alertas = analyze_risks(current_data)
+        
+        if not alertas:
+            st.success("SISTEMA EN EQUILIBRIO - Sin cruces de riesgo detectados.")
+        else:
+            for a in alertas:
+                st.markdown(f"""
+                <div class="decision-card" style="border-left: 10px solid {a['color']};">
+                    <span style="font-size: 0.8rem; color: #86868B;">NIVEL: {a['tipo']}</span><br>
+                    <span class="hazard-text">{a['icon']} {a['msg']}</span><br>
+                    <hr>
+                    <span class="action-text">ACCIÓN RECOMENDADA: Activar Protocolo HSE-0{current_data[0]//20}</span>
+                </div>
+                """, unsafe_allow_html=True)
+
+    st.divider()
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("IRC PROMEDIO", f"{current_data.mean():.1f}%")
+    c2.metric("ENTROPÍA (M80)", f"{current_data[79]}%", "-2%")
+    c3.metric("NODOS MESH", "70,000", "Sinc")
+    c4.metric("ESTADO GPS", "RTK FIX", "1.2cm")
+
+# --- 6. NAVEGACIÓN Y MAIN ---
 def main():
     apply_bunker_ui()
     
-    # Persistencia de Datos (Evita parpadeos en servidor)
-    if 'vault_sync' not in st.session_state:
-        np.random.seed(88) # Semilla Maestra
-        st.session_state.vault_sync = np.random.randint(20, 85, 80)
-
-    # BARRA LATERAL: COLUMNA DE LOS 80
     with st.sidebar:
         st.markdown("<h1>AIH MASTER</h1>", unsafe_allow_html=True)
-        st.markdown("### Bóveda de 80 Analizadores Sincronizados")
+        st.caption(f"80 ANALIZADORES | TRL-4 | {datetime.now().strftime('%H:%M')}")
         st.divider()
         
-        # Selección Unificada 1 a 80
-        opciones = [f"{k} | {v}" for k, v in BOVEDA_80.items()]
-        seleccion = st.radio("ANALIZADOR ACTIVO:", opciones, label_visibility="collapsed")
-        id_sel = seleccion.split(" | ")[0]
+        opciones = [f"{k} - {v}" for k, v in BOVEDA_80.items()]
+        seleccion = st.radio("ANALIZADORES (01-80):", opciones, label_visibility="collapsed")
+        id_sel = seleccion.split(" - ")[0]
 
-    # CONTENEDOR PRINCIPAL
     if id_sel == "01":
-        st.title(BOVEDA_80["01"])
-        st.write("### Panel de Control de Riesgo Holístico TRL 3/4")
-        render_master_radar(st.session_state.vault_sync)
-        
-        # Métricas XL
-        c1, c2, c3 = st.columns(3)
-        c1.metric("IRC AGREGADO", f"{st.session_state.vault_sync.mean():.1f}%", "Nominal")
-        c2.metric("NODOS MESH", "70,000", "Sync OK")
-        c3.metric("INTEGRIDAD", "80/80", "Protegido")
+        render_core_brain()
     else:
-        st.title(f"M{id_sel} | {BOVEDA_80[id_sel]}")
-        st.markdown("---")
-        
-        ca, cb = st.columns([2, 1])
-        with ca:
-            st.write("#### Telemetría Predictiva (Tiempo Real)")
-            st.line_chart(np.random.normal(50, 10, 60), color="#0071E3")
-        with cb:
-            st.metric("ESTADO SENSOR", "SYNC", "100%")
-            st.warning(f"Protocolo de vigilancia activo para {BOVEDA_80[id_sel]}.")
+        st.title(f"{id_sel} | {BOVEDA_80[id_sel]}")
+        st.write("#### Telemetría Directa del Nodo")
+        st.line_chart(np.random.normal(50, 5, 50), color="#0071E3")
+        st.metric("Integridad de Datos", "100%", "Sync")
 
 if __name__ == "__main__":
     main()
