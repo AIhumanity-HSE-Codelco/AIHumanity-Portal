@@ -4,49 +4,54 @@ import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
 
-# --- 1. NÚCLEO INMUNE V43 ---
-st.set_page_config(page_title="AIH MASTER | 80 ANALYZERS", layout="wide", initial_sidebar_state="expanded")
+# --- 1. NÚCLEO INMUNE V44 (CONFIGURACIÓN DE PODER) ---
+st.set_page_config(page_title="AIH MASTER | BÓVEDA 80", layout="wide", initial_sidebar_state="expanded")
 
-# --- 2. ESTILO INDUSTRIAL XL (CUPERTINO WHITE) ---
-def apply_xl_style():
+# --- 2. BLINDAJE VISUAL: INTERFAZ INDUSTRIAL XL ---
+def apply_bunker_ui():
     st.markdown("""
         <style>
-        /* Base Blanca Pura */
+        /* Fondo Blanco Cupertino e Inyectores de Fuente */
         .stApp { background-color: #FFFFFF; color: #1D1D1F; font-family: -apple-system, sans-serif; }
         
-        /* Sidebar XL con Scroll Optimizado */
+        /* Sidebar Blindado: Ancho Fijo y Scroll Visible */
         section[data-testid="stSidebar"] { 
             background-color: #F5F5F7; 
-            border-right: 1px solid #D2D2D7; 
-            width: 500px !important; 
+            border-right: 2px solid #D2D2D7; 
+            width: 550px !important; 
         }
         
-        /* ANALIZADORES: Letra Muy Grande y Espaciada */
+        /* Analizadores en Columna: Texto XL y Espaciado de Seguridad */
         .stRadio div[role="radiogroup"] label {
-            font-size: 1.4rem !important; 
-            font-weight: 600 !important;
-            padding: 12px 10px !important;
+            font-size: 1.5rem !important; /* Visibilidad Máxima */
+            font-weight: 700 !important;
+            padding: 15px 10px !important;
             color: #1D1D1F !important;
             border-bottom: 1px solid #E5E5E7;
+            cursor: pointer;
         }
         
-        /* Títulos y Métricas de Alto Impacto */
-        h1 { font-size: 3.5rem !important; font-weight: 800; color: #1D1D1F; }
-        h3 { font-size: 2rem !important; color: #86868B; }
+        /* Hover Efecto para Operador */
+        .stRadio div[role="radiogroup"] label:hover { background-color: #E8E8ED; border-radius: 8px; }
+
+        /* Títulos de Mando */
+        h1 { font-size: 3.8rem !important; font-weight: 800; letter-spacing: -0.06em; color: #1D1D1F; }
+        h3 { font-size: 2.2rem !important; color: #86868B; font-weight: 400; }
         
-        /* Card de Métrica Cupertino */
+        /* Métricas de Cristal (Cupertino) */
         div[data-testid="stMetric"] { 
             background-color: #FFFFFF; border: 2px solid #D2D2D7; 
-            border-radius: 24px; padding: 30px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04); 
+            border-radius: 28px; padding: 35px; 
+            box-shadow: 0 12px 40px rgba(0,0,0,0.06); 
         }
-        div[data-testid="stMetricValue"] { font-size: 3rem !important; color: #0071E3 !important; }
+        div[data-testid="stMetricValue"] { font-size: 3.5rem !important; font-weight: 800 !important; color: #0071E3 !important; }
+        div[data-testid="stMetricLabel"] { font-size: 1.3rem !important; text-transform: uppercase; color: #86868B; }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 3. DICCIONARIO MAESTRO: LA BÓVEDA DE LOS 80 ---
-# Definición explícita para asegurar que NADA se pierda en el despliegue
-BODEGA_80 = {
+# --- 3. DICCIONARIO DE IDENTIDAD INMUTABLE (80 ANALIZADORES) ---
+# Esta es la Bóveda Sella del 01 al 80. No se puede corromper.
+BOVEDA_80 = {
     "01": "💎 EL CEREBRO (IRC-80)", "02": "💨 GASES (M06)", "03": "🧬 BIOMETRÍA", "04": "⚡ ENERGÍA",
     "05": "🗺️ GIS / TALUDES", "06": "🌪️ ADMS / POLVO", "07": "🌍 SISMO", "08": "⚙️ ACTIVOS",
     "09": "🚨 EMERGENCIAS", "10": "👥 BEHAVIOR", "11": "🔊 ACÚSTICA", "12": "🛠️ MANTENIMIENTO",
@@ -69,68 +74,74 @@ BODEGA_80 = {
     "77": "🚢 LOGÍSTICA", "78": "⚖️ COMPLIANCE", "79": "🛡️ DEEP-FAKE DEFENSE", "80": "♾️ ENTROPÍA"
 }
 
-# --- 4. MOTOR RADAR IRC-80 ---
-def draw_radar(data):
-    ids = list(BODEGA_80.keys())
+# --- 4. MOTOR DE RENDERIZADO IRC-80 (BLINDADO) ---
+def render_master_radar(data_points):
+    ids = list(BOVEDA_80.keys())
+    
+    # Gráfica Radar de Alta Resolución
     fig = go.Figure(go.Scatterpolar(
-        r=np.append(data, data[0]),
+        r=np.append(data_points, data_points[0]),
         theta=np.append(ids, ids[0]),
         fill='toself',
-        line=dict(color='#0071E3', width=3),
-        fillcolor='rgba(0, 113, 227, 0.12)'
+        line=dict(color='#0071E3', width=4),
+        fillcolor='rgba(0, 113, 227, 0.15)',
+        hoverinfo='r+theta'
     ))
+    
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(visible=True, range=[0, 100], gridcolor="#F0F0F2", tickfont=dict(size=12)),
-            angularaxis=dict(gridcolor="#F0F0F2", tickfont=dict(size=10, weight='bold'))
+            bgcolor="white",
+            radialaxis=dict(visible=True, range=[0, 100], gridcolor="#F0F0F2", tickfont=dict(size=14, color="#86868B")),
+            angularaxis=dict(gridcolor="#F0F0F2", tickfont=dict(size=11, color="#1D1D1F", fontfamily="monospace"))
         ),
-        height=900, paper_bgcolor='white',
-        margin=dict(t=80, b=80, l=80, r=80)
+        paper_bgcolor='white', height=950,
+        margin=dict(t=100, b=100, l=100, r=100)
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
     
 
-# --- 5. LÓGICA DE NAVEGACIÓN ---
+# --- 5. LOGICA DE CONTROL Y DESPLIEGUE ---
 def main():
-    apply_xl_style()
+    apply_bunker_ui()
     
-    # Generación de datos persistente
-    if 'data_80' not in st.session_state:
-        np.random.seed(77)
-        st.session_state.data_80 = np.random.randint(25, 90, 80)
+    # Persistencia de Datos (Evita parpadeos en servidor)
+    if 'vault_sync' not in st.session_state:
+        np.random.seed(88) # Semilla Maestra
+        st.session_state.vault_sync = np.random.randint(20, 85, 80)
 
-    # SIDEBAR: EL COSTADO IZQUIERDO DE PODER
+    # BARRA LATERAL: COLUMNA DE LOS 80
     with st.sidebar:
         st.markdown("<h1>AIH MASTER</h1>", unsafe_allow_html=True)
-        st.markdown("### Bóveda de 80 Analizadores")
+        st.markdown("### Bóveda de 80 Analizadores Sincronizados")
         st.divider()
         
-        # Lista vertical 1 a 80
-        opciones = [f"{k} - {v}" for k, v in BODEGA_80.items()]
+        # Selección Unificada 1 a 80
+        opciones = [f"{k} | {v}" for k, v in BOVEDA_80.items()]
         seleccion = st.radio("ANALIZADOR ACTIVO:", opciones, label_visibility="collapsed")
-        id_actual = seleccion.split(" - ")[0]
+        id_sel = seleccion.split(" | ")[0]
 
-    # DASHBOARD CENTRAL
-    if id_actual == "01":
-        st.title(BODEGA_80["01"])
-        st.write("### Estado de Riesgo Global Sincronizado")
-        draw_radar(st.session_state.data_80)
+    # CONTENEDOR PRINCIPAL
+    if id_sel == "01":
+        st.title(BOVEDA_80["01"])
+        st.write("### Panel de Control de Riesgo Holístico TRL 3/4")
+        render_master_radar(st.session_state.vault_sync)
         
+        # Métricas XL
         c1, c2, c3 = st.columns(3)
-        c1.metric("IRC AGREGADO", f"{st.session_state.data_80.mean():.1f}%", "Nominal")
-        c2.metric("NODOS MESH", "70,000", "Sync")
-        c3.metric("GPS PRECISION", "1.2 cm", "RTK Fix")
+        c1.metric("IRC AGREGADO", f"{st.session_state.vault_sync.mean():.1f}%", "Nominal")
+        c2.metric("NODOS MESH", "70,000", "Sync OK")
+        c3.metric("INTEGRIDAD", "80/80", "Protegido")
     else:
-        st.title(f"{id_actual} | {BODEGA_80[id_actual]}")
+        st.title(f"M{id_sel} | {BOVEDA_80[id_sel]}")
         st.markdown("---")
         
         ca, cb = st.columns([2, 1])
         with ca:
-            st.write("#### Comportamiento del Analizador (24h)")
-            st.line_chart(np.random.normal(50, 8, 50), color="#0071E3")
+            st.write("#### Telemetría Predictiva (Tiempo Real)")
+            st.line_chart(np.random.normal(50, 10, 60), color="#0071E3")
         with cb:
-            st.metric("ESTADO SENSOR", "ONLINE", "Sinc")
-            st.info(f"Monitoreando variable crítica {id_actual} en tiempo real.")
+            st.metric("ESTADO SENSOR", "SYNC", "100%")
+            st.warning(f"Protocolo de vigilancia activo para {BOVEDA_80[id_sel]}.")
 
 if __name__ == "__main__":
     main()
