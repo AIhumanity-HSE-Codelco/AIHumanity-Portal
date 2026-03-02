@@ -1,5 +1,4 @@
-requests
+streamlit
 pandas
 numpy
-pydeck
-obspy
+plotly
