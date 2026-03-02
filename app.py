@@ -34,7 +34,6 @@ def apply_ui():
         """, unsafe_allow_html=True)
 
 # --- 3. LA BÓVEDA DE LOS 81 (DECLARACIÓN EXPLÍCITA) ---
-# Aquí están los 81 códigos reflejados individualmente para gobierno total.
 BOVEDA_81 = {
     "01": "💎 EL CEREBRO (IRC-80)", "02": "💨 GASES (M06)", "03": "🧬 BIOMETRÍA", "04": "⚡ ENERGÍA",
     "05": "🗺️ GIS / TALUDES", "06": "🌪️ ADMS / POLVO", "07": "🌍 SISMO", "08": "⚙️ ACTIVOS",
@@ -59,22 +58,20 @@ BOVEDA_81 = {
     "81": "🛡️ BLINDAJE SOBERANO"
 }
 
-# --- 4. PERSISTENCIA Y MOTOR DE DATOS ---
+# --- 4. MOTOR DE PERSISTENCIA ---
 if 'vault' not in st.session_state:
-    # Generamos 81 puntos de datos para el radar
-    st.session_state.vault = [random.randint(25, 85) for _ in range(81)]
+    st.session_state.vault = [random.randint(30, 80) for _ in range(81)]
 
 apply_ui()
 
-# --- 5. SIDEBAR (LA COLUMNA DE LOS 81) ---
+# --- 5. SIDEBAR (LA COLUMNA DE PODER) ---
 with st.sidebar:
     st.markdown("<h1 style='font-size: 2.5rem; color:#0071E3;'>AIH MASTER</h1>", unsafe_allow_html=True)
-    st.write(f"V81 | SISTEMA DE GOBIERNO | {datetime.now().strftime('%H:%M')}")
+    st.write(f"V81 | BÓVEDA BLINDADA | {datetime.now().strftime('%H:%M')}")
     st.divider()
     
-    # Lista desplegada del 01 al 81
     opciones = [f"{k} - {v}" for k, v in BOVEDA_81.items()]
-    seleccion = st.radio("SISTEMA:", opciones, label_visibility="collapsed")
+    seleccion = st.radio("SISTEMA DE MANDO:", opciones, label_visibility="collapsed")
     id_sel = seleccion.split(" - ")[0]
 
 # --- 6. PANEL CENTRAL: EL CEREBRO 01 ---
@@ -83,7 +80,6 @@ if id_sel == "01":
     col_rad, col_sent = st.columns([1.6, 1])
     
     with col_rad:
-        # Radar con los 81 ejes reflejados
         labels = list(BOVEDA_81.keys())
         values = st.session_state.vault
         fig = go.Figure(go.Scatterpolar(
@@ -108,12 +104,11 @@ if id_sel == "01":
                 <h3 style='color:#0071E3;'>ACCIÓN: GOBIERNO ACTIVO</h3>
             </div>
         """, unsafe_allow_html=True)
-        st.metric("NODOS MESH", "70,000", "SINC")
+        st.metric("NODOS MESH", "70,000", "SINC FIX")
         st.metric("SISTEMAS", "81/81", "ONLINE")
 
 # --- 7. PANEL INDIVIDUAL ANALIZADORES (02-81) ---
 else:
-    # Ajustamos índice (0-80) para acceder al valor
     idx = int(id_sel) - 1
     val = st.session_state.vault[idx]
     st.title(f"{id_sel} | {BOVEDA_81[id_sel]}")
