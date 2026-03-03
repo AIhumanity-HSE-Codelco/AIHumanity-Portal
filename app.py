@@ -1,52 +1,68 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import time
 
-# Configuración de Cabecera Industrial HSE
-st.set_page_config(page_title="AIH MASTER - CODELCO/BHP", layout="wide")
+# 1. Configuración de Escala Industrial
+st.set_page_config(page_title="AIH MASTER - HSE CONTROL", layout="wide", initial_sidebar_state="collapsed")
 
-# Estilo de Alto Contraste (Minería Rajo Abierto/Subterráneo)
+# 2. CSS de Alto Impacto (Fondo Negro Absoluto + Neon)
 st.markdown("""
     <style>
-    .stApp {background-color: #0d1117; color: #00FF00;}
-    .stMetric {background-color: #161b22; border: 1px solid #30363d; padding: 10px; border-radius: 5px;}
+    .stApp {background-color: #000000;}
+    h1 {color: #ffffff !important; font-family: 'Courier New', monospace; font-weight: bold; border-bottom: 2px solid #ff4b4b;}
+    .css-10trblm {color: #ffffff !important;}
+    /* Tarjetas de Métricas */
+    [data-testid="stMetricValue"] { color: #00ff00 !important; font-size: 32px !important; }
+    [data-testid="stMetricDelta"] { color: #ff4b4b !important; }
+    /* Ajuste de Matriz */
+    .stDataFrame { border: 1px solid #30363d; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🛡️ AIHUMANITY MASTER: SISTEMA PREVENTIVO ICR")
-st.write(f"**Ubicación de Control:** Bélgica-NYC-Chile | **Estado:** TRL 3-4 Operativo")
+# 3. Encabezado Prioritario Visual (Estado HSE -> MP10 -> MP2.5 -> Conectividad)
+st.title("🛡️ AIHUMANITY MASTER | CONTROL PREVENTIVO")
 
-# 1. KPIs DE SEGURIDAD CRÍTICA
-col1, col2, col3, col4 = st.columns(4)
-with col1: st.metric("ESTADO HSE", "SEGURO", delta="Óptimo")
-with col2: st.metric("NODOS MP10", "200/200", delta="Online")
-with col3: st.metric("RIESGO TALUD", "BAJO", delta="-0.02mm")
-with col4: st.metric("TRANSITO", "FLUIDO", delta="0 Alertas")
+c1, c2, c3, c4 = st.columns([1.5, 1, 1, 1])
+with c1:
+    st.metric("ESTADO HSE", "OPERACIÓN SEGURA", delta="Sin Incidentes")
+with c2:
+    st.metric("MP10 AVG", "42 µg/m³", delta="NORMAL")
+with c3:
+    st.metric("MP2.5 AVG", "12 µg/m³", delta="ESTABLE")
+with c4:
+    st.metric("CONECTIVIDAD", "100%", delta="200 NODOS")
 
-# 2. GENERACIÓN DE LA MATRIZ DE 200 SENSORES
-# Simulación de arquitectura de datos para 200 nodos (10 filas x 20 columnas)
-nodos = 200
-columnas = 20
-filas = 10
+st.markdown("---")
 
-data = np.random.uniform(30.0, 150.0, size=(filas, columnas))
-df = pd.DataFrame(data, columns=[f"C{i}" for i in range(1, columnas + 1)])
+# 4. Matriz de Sensores (200 Nodos: 10x20)
+st.subheader("📊 MATRIZ DE RIESGO PREVENTIVO - 200 NODOS (TRL 3-4)")
 
-# 3. VISTA OPERADOR (ALTO CONTRASTE)
-st.subheader("📊 MATRIZ DE RIESGO PREVENTIVO (Polvo/Gases/Vibración)")
+# Generar datos de 200 sensores
+data = np.random.uniform(20.0, 150.0, size=(10, 20))
+df = pd.DataFrame(data, columns=[f"N{i+1}" for i in range(20)])
 
-def color_vial(val):
-    if val > 120: color = '#ff4b4b' # Rojo: Peligro
-    elif val > 80: color = '#ffff33' # Amarillo: Precaución
-    else: color = '#00ff00'          # Verde: Seguro
-    return f'background-color: {color}; color: black; font-weight: bold'
+# Función de mapeo de colores (Verde/Amarillo/Rojo)
+def apply_color_matrix(val):
+    if val > 130: color = '#ff0000' # Alarma Crítica
+    elif val > 90: color = '#ffff00' # Precaución
+    else: color = '#008000'          # Seguro (Verde Oscuro para contraste)
+    return f'background-color: {color}; color: white; font-weight: bold; border: 1px solid black;'
 
-st.dataframe(df.style.applymap(color_vial).format("{:.1f}"), use_container_width=True)
+# Mostrar matriz compacta
+st.dataframe(
+    df.style.applymap(apply_color_matrix).format("{:.0f}"),
+    use_container_width=True,
+    height=400
+)
 
-# 4. ANÁLISIS PREDICTIVO (MODO ADMIN)
-with st.expander("🔍 DIAGNÓSTICO DE RED Y TRL"):
-    st.write("---")
-    st.write("**Arquitectura:** Centralizada en IP 45.55.165.70")
-    st.write("**Buffer de datos:** Activo (Offline/Online Sync)")
-    st.json({"TRL": 3.4, "Nodos_Activos": 200, "Latencia_Bélgica_NYC": "164ms"})
+# 5. Panel Lateral de Diagnóstico (Vista Admin)
+with st.sidebar:
+    st.header("⚙️ ADMIN DIAGNÓSTICO")
+    st.info("📡 Servidor: NYC-45.55.165.70")
+    st.warning("📍 Origen Control: Bélgica")
+    st.write("**Sensores Activos:**")
+    st.write("- MP10 / MP2.5")
+    st.write("- Viento (Vel/Dir)")
+    st.write("- Taludes (Raveling/Erosión)")
+    if st.button("REINICIAR BUFFER"):
+        st.success("Buffer limpiado.")
