@@ -1,32 +1,71 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import time
 
-st.set_page_config(page_title="AIH MASTER - 200 NODOS", layout="wide", initial_sidebar_state="collapsed")
+# Configuración de página - Alto Contraste / Modo Oscuro
+st.set_page_config(page_title="AIHumanity HSE Master Control", layout="wide")
 
+# Estilo CSS para forzar fondo oscuro y colores industriales
 st.markdown("""
     <style>
-    .stApp { background: #000000; color: white; }
-    .status-card { background: rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); }
-    .neon-purple { color: #bf5af2; text-shadow: 0 0 10px #bf5af2; }
+    .main { background-color: #0E1117; color: #FFFFFF; }
+    .stMetric { background-color: #1E1E1E; padding: 15px; border-radius: 10px; border: 1px solid #333; }
+    .status-nominal { color: #00FF00; font-weight: bold; }
+    .status-alert { color: #FF0000; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown("<h1>🛡️ AIHUMANITY <span class='neon-purple'>MASTER</span> CONTROL</h1>", unsafe_allow_html=True)
+# --- SIDEBAR: ESTADO DE CONECTIVIDAD ---
+with st.sidebar:
+    st.header("🌐 DIAGNÓSTICO")
+    st.info("IP Servidor: 104.236.210.4")
+    st.success("CONECTIVIDAD: ESTABLE")
+    st.divider()
+    view_mode = st.radio("VISTA", ["Operador Simple", "Admin Diagnóstico"])
 
-col1, col2, col3 = st.columns([1, 2, 1])
+# --- HEADER PRINCIPAL ---
+st.title("🛡️ AIHUMANITY MASTER CONTROL")
+col_hse, col_mp10, col_mp25 = st.columns(3)
 
-with col1:
-    st.write("### ANALIZADORES 1-100")
-    df1 = pd.DataFrame(np.random.uniform(20, 150, size=(50, 2)), columns=['A', 'B'])
-    st.dataframe(df1, height=600)
+with col_hse:
+    st.metric(label="ESTADO HSE", value="NOMINAL", delta="ESTABLE")
+with col_mp10:
+    st.metric(label="MP10 PROM.", value="42 µg/m³", delta="-2.1")
+with col_mp25:
+    st.metric(label="MP2.5 PROM.", value="18 µg/m³", delta="+0.5")
 
-with col2:
-    st.markdown("<div style='height: 400px; border: 2px dashed #333; border-radius: 30px; display: flex; align-items: center; justify-content: center;'>VIEWPORT CENTRAL</div>", unsafe_allow_html=True)
-    st.metric("SISTEMA", "TRL 4", delta="READY")
+st.divider()
 
-with col3:
-    st.write("### ANALIZADORES 101-200")
-    df2 = pd.DataFrame(np.random.uniform(20, 150, size=(50, 2)), columns=['C', 'D'])
-    st.dataframe(df2, height=400)
-    st.success("ESTADO HSE: NOMINAL")
+# --- VIEWPORT CENTRAL: ANALIZADORES 1-200 ---
+st.subheader("📊 MATRIZ DE ANALIZADORES (TRL 4)")
+
+# Simulación de datos para los 200 nodos
+data = pd.DataFrame({
+    'ID': [f"AN-{i:03d}" for i in range(1, 201)],
+    'MP10': np.random.uniform(20, 60, 200).round(2),
+    'Estado': np.random.choice(['Verde', 'Amarillo', 'Rojo'], 200, p=[0.85, 0.10, 0.05])
+})
+
+# Grid de visualización
+rows = 10
+cols = 20
+for r in range(rows):
+    cols_grid = st.columns(cols)
+    for c in range(cols):
+        idx = r * cols + c
+        if idx < 200:
+            sensor = data.iloc[idx]
+            color = "#00FF00" if sensor['Estado'] == 'Verde' else "#FFFF00" if sensor['Estado'] == 'Amarillo' else "#FF0000"
+            cols_grid[c].markdown(f"""
+                <div style="background-color: {color}; height: 10px; border-radius: 2px; margin-bottom: 2px;" title="{sensor['ID']}: {sensor['MP10']} µg/m³"></div>
+            """, unsafe_allow_html=True)
+
+# --- DETALLE TÉCNICO ---
+if view_mode == "Admin Diagnóstico":
+    st.divider()
+    st.subheader("⚙️ VARIABLES CRÍTICAS & TALUDES")
+    c1, c2, c3 = st.columns(3)
+    c1.write("**Erosión/Raveling:** Detectado en Sector Sur")
+    c2.write("**Viento:** 12 km/h - Dir: NE")
+    c3.write("**Buffer DB:** 98% Libre")
