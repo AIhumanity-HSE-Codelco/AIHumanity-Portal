@@ -1,73 +1,96 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-from datetime import datetime
+#include <WiFi.h>
+#include <WebServer.h>
 
-# --- CONFIGURACIÓN DE SEGURIDAD ---
-st.set_page_config(
-    page_title="AIHumanity - Master Control",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+// --- CONFIGURACIÓN DE RED ---
+const char* ssid = "Debbie HSE";
+const char* password = "12345678"; 
+const int buttonPin = 4; // PIN 4 y GND
 
-# --- BLINDAJE CSS (Tesla/Industrial Dark) ---
-st.markdown("""
+WebServer server(80);
+
+// --- INTERFAZ DE ESTADO PERMANENTE ---
+const char* htmlContent = R"=====(
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
-    html, body, [data-testid="stAppViewContainer"] {
-        background-color: #050505;
-        color: #D1D1D1;
-        font-family: 'Roboto Mono', monospace;
-    }
-    [data-testid="stMetricValue"] { color: #FFFFFF !important; font-size: 32px !important; }
-    [data-testid="stMetricLabel"] { color: #888 !important; }
+        body { margin: 0; background: #800080; color: white; font-family: sans-serif; 
+               display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        #box { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; 
+               background-color: #800080; transition: background 0.1s; }
+        h1 { font-size: 5rem; margin: 0; text-transform: uppercase; }
     </style>
-    """, unsafe_allow_html=True)
+</head>
+<body onclick="activarAudio()">
+    <div id="box"><h1>MARJAN</h1></div>
 
-# --- FUNCIÓN DE DATOS ---
-def get_sensor_data():
-    sensor_ids = [f"AIDEEPMINER-{i:03d}" for i in range(1, 201)]
-    values = np.random.uniform(5, 95, 200)
-    states = ["OK" if v < 70 else "WARN" if v < 85 else "CRIT" for v in values]
-    return pd.DataFrame({"ID": sensor_ids, "VAL": values, "STATE": states})
+    <script>
+        const words = [
+            {t: "WATER", c: "#0040FF"}, {t: "DEBBIE", c: "#FF0080"},
+            {t: "JUF", c: "#FFFF00"}, {t: "APPEL", c: "#00FF00"},
+            {t: "PIJN", c: "#FF0000"}, {t: "PAPA", c: "#FF8000"}
+        ];
 
-# --- HEADER AIHUMANITY ---
-st.markdown(f"# 🛡️ AIHUMANITY MASTER CONTROL <span style='font-size:14px; color:#444;'>| IP: 104.236.210.4 | {datetime.utcnow().strftime('%H:%M:%S')} UTC</span>", unsafe_allow_html=True)
-st.divider()
+        let audioListo = false;
+        function activarAudio() { audioListo = true; }
 
-# --- MÉTRICAS HSE (CORREGIDAS) ---
-data = get_sensor_data()
-col1, col2, col3, col4 = st.columns(4)
+        function cambiarPalabra() {
+            const item = words[Math.floor(Math.random() * words.length)];
+            const box = document.getElementById('box');
+            
+            box.style.backgroundColor = item.c;
+            box.innerHTML = `<h1>${item.t}</h1>`;
+            
+            if(audioListo) {
+                const msg = new SpeechSynthesisUtterance(item.t);
+                msg.lang = 'nl-NL';
+                window.speechSynthesis.speak(msg);
+            }
+        }
 
-with col1:
-    st.metric("ESTADO HSE", "NOMINAL", delta="PROTEGIDO")
-with col2:
-    st.metric("MP10 AVG", f"{data['VAL'].mean():.1f} µg/m³", delta="-1.2%")
-with col3:
-    st.metric("TALUDES", "98.8%", delta="ESTABLE")
-with col4:
-    st.metric("TRÁNSITO", "FLUIDO", delta="15 km/h")
+        setInterval(() => {
+            fetch('/status').then(r => r.text()).then(data => {
+                if(data === "1") cambiarPalabra();
+            });
+        }, 40);
+    </script>
+</body>
+</html>
+)=====";
 
-st.divider()
+volatile bool pulsado = false;
 
-# --- MATRIZ DE 200 NODOS ---
-st.subheader("RED AIDEEPMINER [NODOS 1-200]")
-cols_per_row = 20
-for i in range(0, 200, cols_per_row):
-    cols = st.columns(cols_per_row)
-    for j in range(cols_per_row):
-        idx = i + j
-        if idx < 200:
-            row = data.iloc[idx]
-            color = "#00FF41" if row["STATE"] == "OK" else "#FFCC00" if row["STATE"] == "WARN" else "#FF3B30"
-            cols[j].markdown(f'<div style="background-color: {color}; height: 12px; border-radius: 1px; margin-bottom: 2px;" title="{row["ID"]}"></div>', unsafe_allow_html=True)
+void setup() {
+    pinMode(buttonPin, INPUT_PULLUP);
+    WiFi.softAP(ssid, password);
+    
+    server.on("/", []() {
+        server.send(200, "text/html", htmlContent);
+    });
 
-st.divider()
+    server.on("/status", []() {
+        if(pulsado) {
+            server.send(200, "text/plain", "1");
+            pulsado = false;
+        } else {
+            server.send(200, "text/plain", "0");
+        }
+    });
 
-# --- FOOTER TÉCNICO ---
-t1, t2 = st.columns([2, 1])
-with t1:
-    st.line_chart(pd.DataFrame(np.random.randn(20, 2), columns=['Polvo', 'Viento']), height=150)
-with t2:
-    st.code("SYSTEM: OPERATIONAL\nNODES: 200/200\nTRL: 4", language="markdown")
+    server.begin();
+}
+
+void loop() {
+    server.handleClient();
+
+    // Reacciona al cerrar el botón (contacto físico)
+    if (digitalRead(buttonPin) == LOW) {
+        pulsado = true;
+        // Se queda aquí hasta que suelte el botón para evitar cambios infinitos
+        while(digitalRead(buttonPin) == LOW) {
+            server.handleClient();
+            delay(10);
+        }
+    }
+}
