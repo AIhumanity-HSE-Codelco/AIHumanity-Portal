@@ -6,47 +6,101 @@ import time
 app = Flask(__name__)
 CORS(app)
 
-# Estado inicial
-monitor = {"activo": False, "last_seen": 0, "mp10": 20.0}
+# Estado persistente
+monitor = {"activo": False, "last_seen": 0, "valor": 20.0}
 
 @app.route('/api/update', methods=['POST'])
 def update():
     global monitor
     data = request.get_json()
-    monitor["mp10"] = data.get("mp10", 20.0)
+    monitor["valor"] = data.get("mp10", 20.0)
     monitor["last_seen"] = time.time()
     monitor["activo"] = True
     return jsonify({"status": "ok"}), 200
 
 @app.route('/api/status')
 def status():
-    # Si pasan más de 5 segundos sin recibir datos del ESP32, vuelve a rojo
-    if time.time() - monitor["last_seen"] > 5:
-        monitor["activo"] = False
-    return jsonify(monitor)
+    # Si pasan más de 4 segundos sin datos, consideramos pérdida de enlace
+    is_online = (time.time() - monitor["last_seen"]) < 4
+    return jsonify({
+        "activo": is_online,
+        "valor": monitor["valor"],
+        "color": "#00ff00" if monitor["valor"] > 50 else "#444"
+    })
 
 @app.route('/')
 def ui():
     return render_template_string("""
-    <body style="background:#050505;color:white;text-align:center;padding-top:50px;font-family:sans-serif;">
-        <h1>AIHUMANITY <span style="color:#666;">HSE LIVE</span></h1>
-        <div id="btn" style="width:220px;height:220px;border-radius:50%;margin:20px auto;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:bold;transition:0.3s;border:8px solid #222;">Cargando...</div>
-        <div style="font-size:2rem;color:#00d4ff;">SENSOR IR: <span id="val">--</span></div>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>AIHUMANITY HSE</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body { background: #0a0a0a; color: #e0e0e0; font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; margin: 0; overflow: hidden; }
+            .container { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+            #indicator { 
+                width: 280px; height: 280px; border-radius: 50%; 
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                transition: all 0.15s ease-in-out; border: 10px solid #1a1a1a;
+                box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            }
+            .status-label { font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 5px; color: #888; }
+            .value-label { font-size: 3.5rem; font-weight: bold; }
+            .unit { font-size: 1rem; color: #666; }
+            #status-text { margin-top: 20px; font-weight: bold; letter-spacing: 1px; }
+            .grid { position: absolute; width: 100%; height: 100%; background-image: radial-gradient(#222 1px, transparent 1px); background-size: 30px 30px; z-index: -1; opacity: 0.5; }
+        </style>
+    </head>
+    <body>
+        <div class="grid"></div>
+        <div class="container">
+            <h2 style="color:#00d4ff; margin-bottom:40px;">SISTEMA DE ALERTA TEMPRANA HSE</h2>
+            <div id="indicator">
+                <span class="status-label">NIVEL RIESGO</span>
+                <span id="val" class="value-label">--</span>
+                <span class="unit">TRL3 SENSOR IR</span>
+            </div>
+            <div id="status-text">ESPERANDO NODO...</div>
+        </div>
+
         <script>
-            async function poll() {
+            async function update() {
                 try {
                     const r = await fetch('/api/status');
                     const d = await r.json();
-                    const b = document.getElementById('btn');
-                    b.style.background = d.activo ? (d.mp10 > 50 ? '#00ff00' : '#444') : '#ff0000';
-                    b.style.boxShadow = d.activo ? (d.mp10 > 50 ? '0 0 50px #00ff00' : 'none') : '0 0 20px #ff0000';
-                    b.innerText = d.activo ? (d.mp10 > 50 ? 'PELIGRO' : 'DESPEJADO') : 'DESCONECTADO';
-                    document.getElementById('val').innerText = d.mp10;
+                    const ind = document.getElementById('indicator');
+                    const valTxt = document.getElementById('val');
+                    const statusTxt = document.getElementById('status-text');
+
+                    valTxt.innerText = d.valor;
+
+                    if (!d.activo) {
+                        ind.style.background = '#330000';
+                        ind.style.borderColor = '#ff0000';
+                        ind.style.boxShadow = '0 0 40px #ff0000';
+                        statusTxt.innerText = '⚠️ NODO DESCONECTADO';
+                        statusTxt.style.color = '#ff0000';
+                    } else if (d.valor > 50) {
+                        ind.style.background = '#003300';
+                        ind.style.borderColor = '#00ff00';
+                        ind.style.boxShadow = '0 0 60px #00ff00';
+                        statusTxt.innerText = '🛡️ DETECCIÓN ACTIVA';
+                        statusTxt.style.color = '#00ff00';
+                    } else {
+                        ind.style.background = '#111';
+                        ind.style.borderColor = '#444';
+                        ind.style.boxShadow = 'none';
+                        statusTxt.innerText = '✅ CAMINO DESPEJADO';
+                        statusTxt.style.color = '#888';
+                    }
                 } catch(e) {}
             }
-            setInterval(poll, 500); // Refresco ultra rápido cada medio segundo
+            setInterval(update, 200); // Sensibilidad extrema: 5 veces por segundo
         </script>
-    </body>""")
+    </body>
+    </html>
+    """)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
